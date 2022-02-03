@@ -1,2 +1,2 @@
-encoded_dimension = 18
-num_components = 50
+encoder_dimensions = 165, 128, 64, 36, 18
+decoder_dimensions = 18, 36, 64, 128, 100

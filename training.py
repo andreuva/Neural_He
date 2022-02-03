@@ -1,13 +1,7 @@
+from operator import mod
 import os
-import torch
 import argparse
-# from architecture import Model
-
-try:
-    import nvidia_smi
-    NVIDIA_SMI = True
-except:
-    NVIDIA_SMI = False
+from model import Model
 
 
 if (__name__ == '__main__'):
@@ -20,10 +14,11 @@ if (__name__ == '__main__'):
     parser.add_argument('--gpu', '--gpu', default=0, type=int, metavar='GPU', help='GPU')
     parser.add_argument('--batch', '--batch', default=128, type=int, metavar='BATCH', help='Batch size')
     parser.add_argument('--split', '--split', default=0.2, type=float, metavar='SPLIT', help='Validation split')
-    parser.add_argument('--epochs', '--epochs', default=100, type=int, metavar='EPOCHS', help='Number of epochs')
-    parser.add_argument('--lr', '--learning-rate', default=1e-4, type=float, metavar='LR', help='Learning rate')
-    parser.add_argument('--rd', '--readir', default=f'../data/train/', metavar='READIR', help='directory for reading the training data')
-    parser.add_argument('--sav', '--savedir', default=f'checkpoints/', metavar='SAVEDIR', help='directory for output files')
+    parser.add_argument('--smooth', '--smoothing-factor', default=0.05, type=float, metavar='SM', help='Smoothing factor for loss')
+    parser.add_argument('--epochs', '--epochs', default=256, type=int, metavar='EPOCHS', help='Number of epochs')
+    parser.add_argument('--lr', '--learning-rate', default=1e-3, type=float, metavar='LR', help='Learning rate')
+    parser.add_argument('--rd', '--readir', default=f'data/', metavar='READIR', help='directory for reading the training data')
+    parser.add_argument('--sav', '--savedir', default=f'checkpoints/test/', metavar='SAVEDIR', help='directory for output files')
 
     # convert the arguments to an object
     parsed = vars(parser.parse_args())
@@ -32,5 +27,9 @@ if (__name__ == '__main__'):
     if not os.path.exists(parsed['sav']):
         os.makedirs(parsed['sav'])
 
-    # check if the GPU is available
-    print(f'GPU available: {torch.cuda.is_available()}')
+    # create the model
+    model = Model(parsed['conf'], parsed['gpu'])
+
+    # train the model
+    model.train(parsed['epochs'], parsed['lr'], parsed['batch'], parsed['split'], parsed['smooth'], parsed['rd'], parsed['sav'])
+    model.summary()
