@@ -89,7 +89,7 @@ class Model(object):
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
 
         # Cosine annealing learning rate scheduler. This will reduce the learning rate with a cosing law
-        # self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, self.n_epochs)
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, self.n_epochs)
 
         # Loss function
         self.loss_fn = torch.nn.MSELoss()
@@ -126,7 +126,7 @@ class Model(object):
                 torch.save(checkpoint, savedir + filename + '_best.pth')
 
             # Update the learning rate
-            # self.scheduler.step()
+            self.scheduler.step()
 
     def optimize(self, epoch):
 
@@ -240,20 +240,15 @@ class Model(object):
 
                 # bring back the output to the CPU
                 out = out.squeeze().cpu()
-                target = target.squeeze().cpu()
+                features = features.squeeze().cpu()
 
                 fft_rec = out.detach().numpy()
                 fft_reconst = np.zeros(self.dataset.n_components, dtype=np.complex64)
                 fft_reconst.real = fft_rec[:self.dataset.n_components]
                 fft_reconst.imag = fft_rec[self.dataset.n_components:]
 
-                fft_target = np.zeros(self.dataset.n_components, dtype=np.complex64)
-                fft_target.real = target[:self.dataset.n_components]
-                fft_target.imag = target[self.dataset.n_components:]
-
                 reconstructed = np.fft.irfft(fft_reconst, n=self.dataset.n_features)
-                label = np.fft.irfft(target, n=self.dataset.n_features)
-                plt.plot(label, 'or')
+                plt.plot(features, 'or')
                 plt.plot(reconstructed, 'b')
             
         print(f'Loss in testing: {loss_avg}')
