@@ -15,7 +15,7 @@ if (__name__ == '__main__'):
     parser.add_argument('--batch', '--batch', default=128, type=int, metavar='BATCH', help='Batch size')
     parser.add_argument('--split', '--split', default=0.9, type=float, metavar='SPLIT', help='Training split')
     parser.add_argument('--smooth', '--smoothing-factor', default=0.05, type=float, metavar='SM', help='Smoothing factor for loss')
-    parser.add_argument('--epochs', '--epochs', default=2500, type=int, metavar='EPOCHS', help='Number of epochs')
+    parser.add_argument('--epochs', '--epochs', default=1000, type=int, metavar='EPOCHS', help='Number of epochs')
     parser.add_argument('--lr', '--learning-rate', default=1e-4, type=float, metavar='LR', help='Learning rate')
     parser.add_argument('--rd', '--readir', default=f'data/', metavar='READIR', help='directory for reading the training data')
     parser.add_argument('--sav', '--savedir', default=f'checkpoints/test/', metavar='SAVEDIR', help='directory for output files')
