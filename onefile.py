@@ -5,6 +5,7 @@ import torch
 import pickle as pkl
 from random import shuffle
 
+device = torch.device("cpu")
 
 class EncoderDecoder(torch.nn.Module):
     def __init__(self, n_components, n_features):
