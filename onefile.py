@@ -115,7 +115,7 @@ loss_function = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(),
                              lr = 1e-4)
 
-epochs = 2500
+epochs = 1000
 losses = []
 for epoch in range(epochs):
     for (spectra, fft_coef) in tqdm(loader, desc = "Epoch {}".format(epoch)):
