@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from torch import _pin_memory
 from tqdm import tqdm
 import torch
 from dataset_test import spectral_dataset
@@ -33,9 +32,9 @@ if (NVIDIA_SMI):
     print(f"Computing in {device} : {nvidia_smi.nvmlDeviceGetName(handle)}")
 
 # create the training dataset
-dataset = spectral_dataset('../DATA/neural_he/spectra/model_ready_data.pkl', train=True)
+dataset = spectral_dataset('../DATA/neural_he/spectra/model_renormalized_data.pkl', train=True)
 # create the test dataset
-test_dataset = spectral_dataset('../DATA/neural_he/spectra/model_ready_data.pkl', train=False)
+test_dataset = spectral_dataset('../DATA/neural_he/spectra/model_renormalized_data.pkl', train=False)
 
 # DataLoader is used to load the dataset
 # for training
@@ -54,11 +53,12 @@ model = EncoderDecoder(dataset.n_components, dataset.n_features).to(device)
 
 # Validation using MSE Loss function
 loss_function = torch.nn.MSELoss()
-  
-# Using an Adam Optimizer with lr = 0.1
-optimizer = torch.optim.Adam(model.parameters(), lr = 1e-4)
 
-epochs = 10000
+# Using an Adam Optimizer with lr = 0.1
+optimizer = torch.optim.Adam(model.parameters(), lr = 1e-1)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=333, gamma=0.1)
+
+epochs = 2000
 smooth = 0.1
 train_losses = []
 test_losses = []
@@ -66,6 +66,7 @@ best_loss = float('inf')
 
 for epoch in range(epochs):
     train_loss_avg = 0
+    model.train()
     for (spectra, fft_coef) in tqdm(train_loader, desc = f"Epoch {epoch}/{epochs}", leave = False):
 
         spectra = spectra.to(device)
@@ -95,24 +96,26 @@ for epoch in range(epochs):
     train_losses.append(train_loss_avg)
     
     test_loss_avg = 0
-    for (spectra, fft_coef) in tqdm(test_loader, desc = "Epoch Validation {epoch}/{epochs}", leave = False):
+    model.eval()
+    with torch.no_grad():
+        for (spectra, fft_coef) in tqdm(test_loader, desc = "Epoch Validation {epoch}/{epochs}", leave = False):
 
-        spectra = spectra.to(device)
-        fft_coef = fft_coef.to(device)
+            spectra = spectra.to(device)
+            fft_coef = fft_coef.to(device)
 
-        # Forward pass
-        # Output of Autoencoder
-        reconstructed = model(spectra)
-        
-        # Calculating the loss function
-        test_loss = loss_function(reconstructed, fft_coef)
+            # Forward pass
+            # Output of Autoencoder
+            reconstructed = model(spectra)
+            
+            # Calculating the loss function
+            test_loss = loss_function(reconstructed, fft_coef)
 
-        # Compute smoothed loss
-        if (test_loss_avg == 0):
-            test_loss_avg = test_loss.item()
-        else:
-            test_loss_avg = smooth * test_loss.item() + (1.0 - smooth) * test_loss_avg
-        
+            # Compute smoothed loss
+            if (test_loss_avg == 0):
+                test_loss_avg = test_loss.item()
+            else:
+                test_loss_avg = smooth * test_loss.item() + (1.0 - smooth) * test_loss_avg
+
     # Storing the losses in a list for plotting
     test_losses.append(test_loss_avg)
 
@@ -134,6 +137,7 @@ for epoch in range(epochs):
         filename = f'checkpoint_{time.strftime("%Y%m%d-%H%M%S")}'
         torch.save(checkpoint, 'checkpoints/' + filename + '_best.pth')
 
+    scheduler.step()
 
 # # Defining the Plot Style
 # plt.style.use('fivethirtyeight')
