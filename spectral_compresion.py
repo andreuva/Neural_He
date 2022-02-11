@@ -25,8 +25,11 @@ def load_data(path):
     # reshape from (n_x, n_y, n_freq) to (n_x*n_y, n_freq)
     intensities = np.reshape(intensities, (intensities.shape[0]*intensities.shape[1], intensities.shape[2]))
     # normalize the data
-    intensities = (intensities - np.mean(intensities))/np.std(intensities)
-
+    # intensities = (intensities - np.mean(intensities))/np.std(intensities)
+    std = np.std(intensities)
+    for i in range(intensities.shape[0]):
+        intensities[i] = (intensities[i] - np.median(intensities[i]))/std
+    
     return freq, intensities
 
 
@@ -117,7 +120,7 @@ def compress_spectra_fft(freq, intensities, n_components):
 
 if __name__ == "__main__":
     # load the data from the file
-    freq, intensities = load_data('data/spectra/raw_data.pkl')
+    freq, intensities = load_data('../DATA/neural_he/spectra/raw_data.pkl')
 
     # extract a subsample of the data to test
     np.random.seed(7777)
@@ -131,16 +134,16 @@ if __name__ == "__main__":
     pca_object, reconstructed_pca = compress_spectra_pca(freq, intensities, intensities_test, n_components=15)  
     poly_models, reconstructed_poly = compress_spectra_poly(freq, intensities_test, 20)
     spline_models, reconstructed_spline = compress_spectra_spline(freq, intensities_test, 20)
-    fft_coeff, reconstructed_fft = compress_spectra_fft(freq, intensities_test, 25)
+    fft_coeff, reconstructed_fft = compress_spectra_fft(freq, intensities_test, 35)
 
     plot_data(freq, intensities_test, color='.b')
-    # plot_data(freq, reconstructed_poly, color='g')
-    # plot_data(freq, reconstructed_spline, color='pink')
+    plot_data(freq, reconstructed_poly, color='g')
+    plot_data(freq, reconstructed_spline, color='pink')
     plot_data(freq, reconstructed_fft, color='orange')
     plot_data(freq, reconstructed_pca, color='r', show=True)
 
     # compute the fft coefficients of all the samples in the data
-    fft_coeffs, reconstructed_ffts = compress_spectra_fft(freq, intensities, 25)
+    fft_coeffs, reconstructed_ffts = compress_spectra_fft(freq, intensities, 50)
     
     # create a dictionary with the coefficients of the different models
     # and the instensities that are associated to each model
@@ -150,5 +153,5 @@ if __name__ == "__main__":
                   }
 
     # save the coefficients to a pkl for training the encoder-decoder network
-    # with open('data/spectra/model_ready_data.pkl', 'wb') as f:
-    #     pkl.dump(models_dict, f)
+    with open('../DATA/neural_he/spectra/model_renormalized_data.pkl', 'wb') as f:
+        pkl.dump(models_dict, f)
