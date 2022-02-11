@@ -59,7 +59,7 @@ with torch.no_grad():
 
         # save the reconstructed spectra to a variable
         reconstructed_spectra.append([spectra, reconstructed, fft_coef])
-    
+
 spectres = np.array([iterat[0] for iterat in reconstructed_spectra])
 spectres = np.squeeze(spectres)
 reconstructions = np.array([iterat[1] for iterat in reconstructed_spectra])

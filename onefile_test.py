@@ -55,8 +55,8 @@ model = EncoderDecoder(dataset.n_components, dataset.n_features).to(device)
 loss_function = torch.nn.MSELoss()
 
 # Using an Adam Optimizer with lr = 0.1
-optimizer = torch.optim.Adam(model.parameters(), lr = 1e-1)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=333, gamma=0.1)
+optimizer = torch.optim.Adam(model.parameters(), lr = 1e-3)
+# scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=333, gamma=0.1)
 
 epochs = 2000
 smooth = 0.1
@@ -75,10 +75,10 @@ for epoch in range(epochs):
         # Forward pass
         # Output of Autoencoder
         reconstructed = model(spectra)
-        
+
         # Calculating the loss function
         train_loss = loss_function(reconstructed, fft_coef)
-        
+
         # The gradients are set to zero,
         # the the gradient is computed and stored.
         # .step() performs parameter update
@@ -91,10 +91,10 @@ for epoch in range(epochs):
             train_loss_avg = train_loss.item()
         else:
             train_loss_avg = smooth * train_loss.item() + (1.0 - smooth) * train_loss_avg
-        
+
     # Storing the losses in a list for plotting
     train_losses.append(train_loss_avg)
-    
+
     test_loss_avg = 0
     model.eval()
     with torch.no_grad():
@@ -106,7 +106,7 @@ for epoch in range(epochs):
             # Forward pass
             # Output of Autoencoder
             reconstructed = model(spectra)
-            
+
             # Calculating the loss function
             test_loss = loss_function(reconstructed, fft_coef)
 
@@ -137,7 +137,7 @@ for epoch in range(epochs):
         filename = f'checkpoint_{time.strftime("%Y%m%d-%H%M%S")}'
         torch.save(checkpoint, 'checkpoints/' + filename + '_best.pth')
 
-    scheduler.step()
+    # scheduler.step()
 
 # # Defining the Plot Style
 # plt.style.use('fivethirtyeight')

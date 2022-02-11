@@ -7,7 +7,7 @@ class EncoderDecoder(torch.nn.Module):
 
         self.n_components = n_components
         self.n_features = n_features
-          
+
         # Building an linear encoder with Linear
         # layer followed by Relu activation function
         # n_features ==> 18
@@ -20,7 +20,7 @@ class EncoderDecoder(torch.nn.Module):
             torch.nn.ReLU(),
             torch.nn.Linear(36, 18),
             torch.nn.ReLU())
-          
+
         # Building an linear decoder with Linear
         # layer followed by Relu activation function
         # The Sigmoid activation function
@@ -34,7 +34,7 @@ class EncoderDecoder(torch.nn.Module):
             torch.nn.Linear(64, 128),
             torch.nn.ReLU(),
             torch.nn.Linear(128, n_components*2))
-  
+
     def forward(self, x):
         encoded = self.encoder(x)
         decoded = self.decoder(encoded)
