@@ -2,33 +2,40 @@ import torch
 
 
 class EncoderDecoder(torch.nn.Module):
-    def __init__(self, layer_size_encoder, layer_size_decoder):
+    def __init__(self, n_components, n_features):
         super().__init__()
+
+        self.n_components = n_components
+        self.n_features = n_features
 
         # Building an linear encoder with Linear
         # layer followed by Relu activation function
-        self.encoder = torch.nn.ModuleList([])
-        self.decoder = torch.nn.ModuleList([])
-
-        for i in range(0,len(layer_size_encoder)-1):
-            print(f'Encoder layer {i} : {layer_size_encoder[i]} -> {layer_size_encoder[i+1]}')
-            self.encoder.append(torch.nn.Linear(layer_size_encoder[i], layer_size_encoder[i+1]))
-            self.encoder.append(torch.nn.ReLU())
+        # n_features ==> 18
+        self.encoder = torch.nn.Sequential(
+            torch.nn.Linear(n_features, 128),
+            torch.nn.ReLU(),
+            torch.nn.Linear(128, 64),
+            torch.nn.ReLU(),
+            torch.nn.Linear(64, 36),
+            torch.nn.ReLU(),
+            torch.nn.Linear(36, 18),
+            torch.nn.ReLU())
 
         # Building an linear decoder with Linear
         # layer followed by Relu activation function
-        for i in range(len(layer_size_decoder)-1):
-            print(f'Decoder layer {i} : {layer_size_decoder[i]} -> {layer_size_decoder[i+1]}')
-            self.decoder.append(torch.nn.Linear(layer_size_decoder[i], layer_size_decoder[i+1]))
-            self.decoder.append(torch.nn.ReLU())
+        # The Sigmoid activation function
+        # outputs the value between 0 and 1
+        # 18 ==> n_components
+        self.decoder = torch.nn.Sequential(
+            torch.nn.Linear(18, 36),
+            torch.nn.ReLU(),
+            torch.nn.Linear(36, 64),
+            torch.nn.ReLU(),
+            torch.nn.Linear(64, 128),
+            torch.nn.ReLU(),
+            torch.nn.Linear(128, n_components*2))
 
     def forward(self, x):
-        # Forward pass through the encoder
-        for layer in self.encoder:
-            x = layer(x)
-
-        # Forward pass through the decoder
-        for layer in self.decoder:
-            x = layer(x)
-
-        return x
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        return decoded
