@@ -68,11 +68,11 @@ fft_coefs = np.array([iterat[2] for iterat in reconstructed_spectra])
 fft_coefs = np.squeeze(fft_coefs)
 
 for i in range(10):
-    plt.plot(spectres[i], label='original')
-    plt.plot(reconstructions[i], '.', label='reconstructed')
+    plt.plot(spectres[i],'.', label='original')
+    plt.plot(reconstructions[i], label='reconstructed')
 
-# plt.legend()
-plt.show()
+    plt.legend()
+    plt.show()
 
 for i in range(len(spectres)):
     plt.plot(spectres[i], reconstructions[i], '.r')
