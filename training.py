@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import torch
-from dataset_test import spectral_dataset
-from NN_test import EncoderDecoder
+from dataset import spectral_dataset
+from NN import EncoderDecoder
 import time
 
 try:
