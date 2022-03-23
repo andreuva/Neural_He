@@ -37,12 +37,12 @@ def plot_data(freq, profiles, color='b', show=False):
 Function to compress the spectra extracting the most
 important features and reconstructing the spectra
 """
-def compress_spectra_pca(freq, intensities, intensities_test, n_components, n_show=3):
+def compress_spectra_pca(freq, profiles, profiles_test, n_components):
     # perform the PCA
     pca = PCA(n_components=n_components)
-    pca.fit(intensities)
+    pca.fit(profiles)
     # decompose the test spectra
-    compressed = pca.transform(intensities_test)
+    compressed = pca.transform(profiles_test)
     # reconstruct the spectra
     reconstructed = pca.inverse_transform(compressed)  
     
@@ -53,9 +53,9 @@ def compress_spectra_pca(freq, intensities, intensities_test, n_components, n_sh
 Function to extract the most importat fourier coefficients of the spectra
 and reconstruct the spectra using the fourier coefficients and the frequencies
 """
-def compress_spectra_fft(freq, intensities, n_components):
+def compress_spectra_fft(freq, profiles, n_components):
     # perform the fft
-    fft = np.fft.rfft(intensities, axis=1)
+    fft = np.fft.rfft(profiles, axis=1)
     # extract the coefficients
     fft_coeff = fft[:,:n_components]
     # reconstruct the spectra
@@ -68,7 +68,7 @@ def compress_spectra_fft(freq, intensities, n_components):
 
 if __name__ == "__main__":
     # load the data from the file
-    parameters, profiles = load_data('data_20220322_141552/')
+    parameters, profiles = load_data('data_20220322_191501/')
 
     # extract a subsample of the data to test
     np.random.seed(7777)
@@ -83,13 +83,14 @@ if __name__ == "__main__":
                param['JKQ_1'][1][1].real, param['JKQ_1'][2][1].real, param['JKQ_1'][2][2].real,
                param['JKQ_1'][1][1].imag, param['JKQ_1'][2][1].imag, param['JKQ_1'][2][2].imag] # Radiation field
               for param in parameters]
+    params = np.array(params)
 
     # plot the subset
     # plot_data(nus, profiles_test, show=True)
 
     # compress the data
     pca_object, reconstructed_pca = compress_spectra_pca(nus, profiles, profiles_test, n_components=30)  
-    fft_coeff, reconstructed_fft = compress_spectra_fft(nus, profiles_test, 35)
+    fft_coeff, reconstructed_fft = compress_spectra_fft(nus, profiles_test, 50)
 
     # show the reconstructed spectra using the PCA and the FFT
     plot_data(nus, profiles_test, color='.b')
@@ -103,11 +104,12 @@ if __name__ == "__main__":
     # and the instensities that are associated to each model
     models_dict = {
         'profiles'  : profiles,
-        'fft_coeffs': fft_coeffs,
+        'fft_coeffs': fft_coeffs/fft_coeffs.mean(),
+        'norm_fft'  : fft_coeffs.mean(),
         'nus'       : nus,
-        'parameters': params
-                  }
+        'parameters': params/np.mean(params, axis=0),
+        'norm_param': np.mean(params, axis=0)}
 
     # save the coefficients to a pkl for training the encoder-decoder network
-    with open('../DATA/neural_he/spectra/model_profiles.pkl', 'wb') as f:
+    with open('../DATA/neural_he/spectra/model_ready_flat_spectrum.pkl', 'wb') as f:
         pkl.dump(models_dict, f)

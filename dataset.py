@@ -12,7 +12,7 @@ class spectral_dataset(torch.utils.data.Dataset):
             data = pkl.load(f)
 
         # Compute the number of samples for the training and test sets
-        self.n_samples = len(data['intensities'])
+        self.n_samples = len(data['parameters'])
         if train:
             self.n_samples = int(self.n_samples * train_split)
             start = 0
@@ -25,10 +25,14 @@ class spectral_dataset(torch.utils.data.Dataset):
         shuffle(indices)
 
         # Load the samples (separate the training and test data)
-        self.data = np.array(data['intensities'][start:], dtype=np.float32)
+        self.data = np.array(data['parameters'][start:], dtype=np.float32)
         # Load the labels
         self.labels = np.concatenate((data['fft_coeffs'][start:].real, data['fft_coeffs'][start:].imag), 
                                      axis=-1, dtype=np.float32)
+
+        # add the normalization factors to the dataset object
+        self.norm_fft = data['norm_fft']
+        self.norm_param = data['norm_param']
 
         # shuffle the data
         self.data = self.data[indices]
@@ -36,6 +40,7 @@ class spectral_dataset(torch.utils.data.Dataset):
 
         self.n_features = self.data.shape[1]
         self.n_components = int(self.labels.shape[1]/2)
+        self.N_nus = len(data['nus'])
 
     def __getitem__(self, index):
         return self.data[index], self.labels[index]

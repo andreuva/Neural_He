@@ -32,9 +32,9 @@ if (NVIDIA_SMI):
     print(f"Computing in {device} : {nvidia_smi.nvmlDeviceGetName(handle)}")
 
 # create the training dataset
-dataset = spectral_dataset('../DATA/neural_he/spectra/model_renormalized_data.pkl', train=True)
+dataset = spectral_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum.pkl', train=True)
 # create the test dataset
-test_dataset = spectral_dataset('../DATA/neural_he/spectra/model_renormalized_data.pkl', train=False)
+test_dataset = spectral_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum.pkl', train=False)
 
 # DataLoader is used to load the dataset
 # for training
@@ -58,7 +58,7 @@ loss_function = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr = 1e-3)
 # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=333, gamma=0.1)
 
-epochs = 2000
+epochs = 1000
 smooth = 0.1
 train_losses = []
 test_losses = []
@@ -67,14 +67,14 @@ best_loss = float('inf')
 for epoch in range(epochs):
     train_loss_avg = 0
     model.train()
-    for (spectra, fft_coef) in tqdm(train_loader, desc = f"Epoch {epoch}/{epochs}", leave = False):
+    for (profiles, fft_coef) in tqdm(train_loader, desc = f"Epoch {epoch}/{epochs}", leave = False):
 
-        spectra = spectra.to(device)
+        profiles = profiles.to(device)
         fft_coef = fft_coef.to(device)
 
         # Forward pass
         # Output of Autoencoder
-        reconstructed = model(spectra)
+        reconstructed = model(profiles)
 
         # Calculating the loss function
         train_loss = loss_function(reconstructed, fft_coef)
@@ -98,14 +98,14 @@ for epoch in range(epochs):
     test_loss_avg = 0
     model.eval()
     with torch.no_grad():
-        for (spectra, fft_coef) in tqdm(test_loader, desc = "Epoch Validation {epoch}/{epochs}", leave = False):
+        for (profiles, fft_coef) in tqdm(test_loader, desc = "Epoch Validation {epoch}/{epochs}", leave = False):
 
-            spectra = spectra.to(device)
+            profiles = profiles.to(device)
             fft_coef = fft_coef.to(device)
 
             # Forward pass
             # Output of Autoencoder
-            reconstructed = model(spectra)
+            reconstructed = model(profiles)
 
             # Calculating the loss function
             test_loss = loss_function(reconstructed, fft_coef)
@@ -119,7 +119,7 @@ for epoch in range(epochs):
     # Storing the losses in a list for plotting
     test_losses.append(test_loss_avg)
 
-    print(f"Epoch {epoch}: Train Loss: {train_loss_avg:.6f}, Test Loss: {test_loss_avg:.6f}")
+    print(f"Epoch {epoch}: Train Loss: {train_loss_avg:1.3e}, Test Loss: {test_loss_avg:1.3e}")
 
     if (test_loss_avg < best_loss):
         best_loss = test_loss_avg
@@ -135,7 +135,7 @@ for epoch in range(epochs):
 
         print("Saving best model...")
         filename = f'checkpoint_{time.strftime("%Y%m%d-%H%M%S")}'
-        torch.save(checkpoint, 'checkpoints/' + filename + '_best.pth')
+        # torch.save(checkpoint, 'checkpoints/' + filename + '_best.pth')
 
     # scheduler.step()
 
@@ -154,15 +154,29 @@ plt.show()
 # select a random sample from the test dataset and test the network
 # then plot the predicted output and the ground truth
 for indx in np.random.randint(0,test_dataset.n_samples,5):
-    spectra, fft_coef = test_dataset[indx]
+    params, fft_coef = test_dataset[indx]
 
-    fft_rec = model.forward(torch.tensor(spectra).to(device))
+    fft_imag = np.zeros(test_dataset.n_components, dtype=np.complex64)
+    fft_imag.real = fft_coef[:test_dataset.n_components]
+    fft_imag.imag = fft_coef[test_dataset.n_components:]
+    fft_imag = fft_imag*test_dataset.norm_fft
+
+    profile = np.fft.irfft(fft_imag, n=test_dataset.N_nus)
+
+    fft_rec = model.forward(torch.tensor(params).to(device))
     fft_rec = fft_rec.detach().cpu().numpy()
+
     fft_rec_imag = np.zeros(test_dataset.n_components, dtype=np.complex64)
     fft_rec_imag.real = fft_rec[:test_dataset.n_components]
     fft_rec_imag.imag = fft_rec[test_dataset.n_components:]
-    reconstructed = np.fft.irfft(fft_rec_imag, n=len(spectra))
+    fft_rec_imag = fft_rec_imag*test_dataset.norm_fft
 
-    plt.plot(spectra, 'or')
+    reconstructed = np.fft.irfft(fft_rec_imag, n=test_dataset.N_nus)
+
+    plt.plot(fft_coef, 'or')
+    plt.plot(fft_rec, 'b')
+    plt.show()
+
+    plt.plot(profile, 'or')
     plt.plot(reconstructed, 'b')
     plt.show()
