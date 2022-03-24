@@ -181,15 +181,17 @@ print('-'*50)
 
 # # Defining the Plot Style
 # plt.style.use('fivethirtyeight')
+plt.figure(figsize=(12, 8), dpi=150)
 plt.xlabel('Iterations')
 plt.ylabel('Loss')
-  
-# # Plotting the last 100 values
+
+# Plotting the last 100 values
 plt.plot(train_losses)
 plt.plot(test_losses)
 plt.xscale('log')
 plt.yscale('log')
-plt.show()
+plt.savefig(f'losses_{filename}.png')
+plt.close()
 
 # select a random sample from the test dataset and test the network
 # then plot the predicted output and the ground truth
