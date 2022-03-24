@@ -17,6 +17,7 @@ except:
 cuda = torch.cuda.is_available()
 gpu = 0
 device = torch.device(f"cuda:{gpu}" if cuda else "cpu")
+print('Checking the GPU availability...')
 if cuda:
     print('GPU is available')
     print('Using GPU {}'.format(gpu))
@@ -32,23 +33,40 @@ if (NVIDIA_SMI):
     print(f"Computing in {device} : {nvidia_smi.nvmlDeviceGetName(handle)}")
 
 # create the training dataset
+print('-'*50)
+print('Creating the training dataset ...')
 dataset = spectral_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum.pkl', train=True)
 # create the test dataset
+print('Creating the test dataset ...\n')
 test_dataset = spectral_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum.pkl', train=False)
+
+samples_test = set(test_dataset.indices)
+samples_train = set(dataset.indices)
+
+# check that the training and test sets are disjoint
+print('Number of training samples: {}'.format(len(samples_train)))
+print('Number of test samples: {}'.format(len(samples_test)))
+print('Number of samples in both sets: {}'.format(len(samples_train.intersection(samples_test))))
+assert(len(samples_test.intersection(samples_train)) == 0)
+print('Training and test sets are disjoint!\n')
 
 # DataLoader is used to load the dataset
 # for training
+print('Creating the training DataLoader ...')
 train_loader = torch.utils.data.DataLoader(dataset = dataset,
 									 batch_size = 128,
 									 shuffle = True,
                                      pin_memory = True)
 
+print('Creating the test DataLoader ...')
 test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
                                           batch_size = 128,
                                           shuffle = True,
                                           pin_memory = True)
 
 # Model Initialization
+print('-'*50)
+print('Initializing the model ...\n')
 model = EncoderDecoder(dataset.n_components, dataset.n_features).to(device)
 
 # Validation using MSE Loss function
@@ -64,10 +82,18 @@ train_losses = []
 test_losses = []
 best_loss = float('inf')
 
-for epoch in range(epochs):
+# start training
+print('-'*50)
+print('Training the model ...\n')
+start_time = time.time()
+print('Start time: {}'.format(start_time))
+print('-'*50 + '\n')
+# for epoch in range(epochs):
+for epoch in tqdm(range(epochs), desc=f"Epochs"):
     train_loss_avg = 0
     model.train()
-    for (profiles, fft_coef) in tqdm(train_loader, desc = f"Epoch {epoch}/{epochs}", leave = False):
+    # for (profiles, fft_coef) in tqdm(train_loader, desc = f"Epoch {epoch}/{epochs}", leave = False):
+    for (profiles, fft_coef) in train_loader:
 
         profiles = profiles.to(device)
         fft_coef = fft_coef.to(device)
@@ -98,7 +124,8 @@ for epoch in range(epochs):
     test_loss_avg = 0
     model.eval()
     with torch.no_grad():
-        for (profiles, fft_coef) in tqdm(test_loader, desc = "Epoch Validation {epoch}/{epochs}", leave = False):
+        # for (profiles, fft_coef) in tqdm(test_loader, desc = "Epoch Validation {epoch}/{epochs}", leave = False):
+        for (profiles, fft_coef) in test_loader:
 
             profiles = profiles.to(device)
             fft_coef = fft_coef.to(device)
@@ -119,7 +146,7 @@ for epoch in range(epochs):
     # Storing the losses in a list for plotting
     test_losses.append(test_loss_avg)
 
-    print(f"Epoch {epoch}: Train Loss: {train_loss_avg:1.3e}, Test Loss: {test_loss_avg:1.3e}")
+    # print(f"Epoch {epoch}: Train Loss: {train_loss_avg:1.2e}, Test Loss: {test_loss_avg:1.2e}")
 
     if (test_loss_avg < best_loss):
         best_loss = test_loss_avg
@@ -133,11 +160,24 @@ for epoch in range(epochs):
             # 'hyperparameters': hyperparameters,
             'optimizer': optimizer.state_dict()}
 
-        print("Saving best model...")
+        # print("Saving best model...")
         filename = f'checkpoint_{time.strftime("%Y%m%d-%H%M%S")}'
-        # torch.save(checkpoint, 'checkpoints/' + filename + '_best.pth')
+        torch.save(checkpoint, 'checkpoints/' + filename + '_best.pth')
 
     # scheduler.step()
+
+# finished training
+end_time = time.time()
+print('End time: {}'.format(end_time))
+print('Training time: {}'.format(end_time - start_time))
+print('-'*50)
+
+print('Saving the model ...')
+filename = f'checkpoint_final_{time.strftime("%Y%m%d-%H%M%S")}'
+torch.save(checkpoint, 'checkpoints/' + filename + '.pth')
+print('Model saved!\n')
+print('-'*50)
+
 
 # # Defining the Plot Style
 # plt.style.use('fivethirtyeight')
@@ -153,7 +193,11 @@ plt.show()
 
 # select a random sample from the test dataset and test the network
 # then plot the predicted output and the ground truth
-for indx in np.random.randint(0,test_dataset.n_samples,5):
+print('Ploting and saving Intiensities from the sampled populations from the test data ...\n')
+fig1, ax1 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
+fig2, ax2 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
+
+for i, indx in tqdm(enumerate(np.random.randint(0,test_dataset.n_samples,25))):
     params, fft_coef = test_dataset[indx]
 
     fft_imag = np.zeros(test_dataset.n_components, dtype=np.complex64)
@@ -173,10 +217,19 @@ for indx in np.random.randint(0,test_dataset.n_samples,5):
 
     reconstructed = np.fft.irfft(fft_rec_imag, n=test_dataset.N_nus)
 
-    plt.plot(fft_coef, 'or')
-    plt.plot(fft_rec, 'b')
-    plt.show()
+    ax1.flat[i].plot(fft_coef[:test_dataset.n_components], '--', color='C0')
+    ax1.flat[i].plot(fft_coef[test_dataset.n_components:], color='C0')
+    ax1.flat[i].plot(fft_rec[:test_dataset.n_components], '--', color='C1')
+    ax1.flat[i].plot(fft_rec[test_dataset.n_components:], color='C1')
 
-    plt.plot(profile, 'or')
-    plt.plot(reconstructed, 'b')
-    plt.show()
+    ax2.flat[i].plot(test_dataset.nus, profile, color='C0')
+    ax2.flat[i].plot(test_dataset.nus, reconstructed, color='C1')
+
+# saving the plots
+print('Saving the plots ...\n')
+
+fig1.savefig(f'checkpoints/test_fft_3.png', bbox_inches='tight')
+plt.close(fig1)
+
+fig2.savefig(f'checkpoints/test_profile_3.png', bbox_inches='tight')
+plt.close(fig2)
