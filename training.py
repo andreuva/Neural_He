@@ -35,10 +35,10 @@ if (NVIDIA_SMI):
 # create the training dataset
 print('-'*50)
 print('Creating the training dataset ...')
-dataset = spectral_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum.pkl', train=True)
+dataset = spectral_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum_100k.pkl', train=True)
 # create the test dataset
 print('Creating the test dataset ...\n')
-test_dataset = spectral_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum.pkl', train=False)
+test_dataset = spectral_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum_100k.pkl', train=False)
 
 samples_test = set(test_dataset.indices)
 samples_train = set(dataset.indices)
@@ -54,13 +54,13 @@ print('Training and test sets are disjoint!\n')
 # for training
 print('Creating the training DataLoader ...')
 train_loader = torch.utils.data.DataLoader(dataset = dataset,
-									 batch_size = 128,
+									 batch_size = 256,
 									 shuffle = True,
                                      pin_memory = True)
 
 print('Creating the test DataLoader ...')
 test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
-                                          batch_size = 128,
+                                          batch_size = 256,
                                           shuffle = True,
                                           pin_memory = True)
 
