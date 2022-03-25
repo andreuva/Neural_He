@@ -5,7 +5,7 @@ import numpy as np
 
 
 # Define the dataset class for storing the data
-class spectral_dataset(torch.utils.data.Dataset):
+class profiles_dataset(torch.utils.data.Dataset):
     def __init__(self, data_path, train=True, train_split=0.8):
         # Load the spectral data
         with open(data_path, 'rb') as f:

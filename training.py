@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import torch
-from dataset import spectral_dataset
+from dataset import profiles_dataset
 from NN import EncoderDecoder
 import time
 
@@ -35,10 +35,10 @@ if (NVIDIA_SMI):
 # create the training dataset
 print('-'*50)
 print('Creating the training dataset ...')
-dataset = spectral_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum_100k.pkl', train=True)
+dataset = profiles_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum_100k.pkl', train=True)
 # create the test dataset
 print('Creating the test dataset ...\n')
-test_dataset = spectral_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum_100k.pkl', train=False)
+test_dataset = profiles_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum_100k.pkl', train=False)
 
 samples_test = set(test_dataset.indices)
 samples_train = set(dataset.indices)
@@ -190,7 +190,7 @@ plt.plot(train_losses)
 plt.plot(test_losses)
 plt.xscale('log')
 plt.yscale('log')
-plt.savefig(f'losses_{filename}.png')
+plt.savefig(f'checkpoints/losses_{filename}.png')
 plt.close()
 
 # select a random sample from the test dataset and test the network
@@ -230,8 +230,8 @@ for i, indx in tqdm(enumerate(np.random.randint(0,test_dataset.n_samples,25))):
 # saving the plots
 print('Saving the plots ...\n')
 
-fig1.savefig(f'checkpoints/test_fft_3.png', bbox_inches='tight')
+fig1.savefig(f'checkpoints/test_fft_{filename}.png', bbox_inches='tight')
 plt.close(fig1)
 
-fig2.savefig(f'checkpoints/test_profile_3.png', bbox_inches='tight')
+fig2.savefig(f'checkpoints/test_profile_{filename}.png', bbox_inches='tight')
 plt.close(fig2)
