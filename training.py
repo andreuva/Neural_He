@@ -1,10 +1,12 @@
+from email.mime import base
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.model_selection import learning_curve
 from tqdm import tqdm
 import torch
 from dataset import profiles_dataset
 from NN import EncoderDecoder
-import time
+import time, os
 
 try:
     import nvidia_smi
@@ -12,6 +14,22 @@ try:
 except:
     NVIDIA_SMI = False
 
+
+readir = '../DATA/neural_he/spectra/'
+readfile = 'model_ready_flat_spectrum_100k.pkl'
+batch_size = 256
+epochs = 5000
+learning_rate = 1e-3
+step_size_scheduler = 333
+gamma_scheduler = 0.33
+smooth = 0.25
+
+# construct the base name to save the model
+basename = f'checkpoint_batch_{batch_size}.pth'
+savedir = f'./checkpoints_batch_sm_{batch_size}_{learning_rate}_{gamma_scheduler}/'
+# check if there is a folder for the checkpoints and create it if not
+if not os.path.exists(savedir):
+    os.makedirs(savedir)
 
 # check if the GPU is available
 cuda = torch.cuda.is_available()
@@ -32,13 +50,12 @@ if (NVIDIA_SMI):
     handle = nvidia_smi.nvmlDeviceGetHandleByIndex(gpu)
     print(f"Computing in {device} : {nvidia_smi.nvmlDeviceGetName(handle)}")
 
-# create the training dataset
+# create the training and test dataset
 print('-'*50)
 print('Creating the training dataset ...')
-dataset = profiles_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum_100k.pkl', train=True)
-# create the test dataset
+dataset = profiles_dataset(f'{readir}{readfile}', train=True)
 print('Creating the test dataset ...\n')
-test_dataset = profiles_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum_100k.pkl', train=False)
+test_dataset = profiles_dataset(f'{readir}{readfile}', train=False)
 
 samples_test = set(test_dataset.indices)
 samples_train = set(dataset.indices)
@@ -50,17 +67,15 @@ print('Number of samples in both sets: {}'.format(len(samples_train.intersection
 assert(len(samples_test.intersection(samples_train)) == 0)
 print('Training and test sets are disjoint!\n')
 
-# DataLoader is used to load the dataset
-# for training
+# DataLoader is used to load the dataset for training and testing
 print('Creating the training DataLoader ...')
 train_loader = torch.utils.data.DataLoader(dataset = dataset,
-									 batch_size = 256,
+									 batch_size = batch_size,
 									 shuffle = True,
                                      pin_memory = True)
-
 print('Creating the test DataLoader ...')
 test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
-                                          batch_size = 256,
+                                          batch_size = batch_size,
                                           shuffle = True,
                                           pin_memory = True)
 
@@ -72,12 +87,13 @@ model = EncoderDecoder(dataset.n_components, dataset.n_features).to(device)
 # Validation using MSE Loss function
 loss_function = torch.nn.MSELoss()
 
-# Using an Adam Optimizer with lr = 0.1
-optimizer = torch.optim.Adam(model.parameters(), lr = 1e-3)
-# scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=333, gamma=0.1)
+# Using an Adam Optimizer with learning rate scheduler
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
+                                            step_size=step_size_scheduler,
+                                            gamma=gamma_scheduler)
+# scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1, end_factor=1e-7, total_iters=epochs)
 
-epochs = 1000
-smooth = 0.1
 train_losses = []
 test_losses = []
 best_loss = float('inf')
@@ -88,18 +104,17 @@ print('Training the model ...\n')
 start_time = time.time()
 print('Start time: {}'.format(start_time))
 print('-'*50 + '\n')
-# for epoch in range(epochs):
-for epoch in tqdm(range(epochs), desc=f"Epochs"):
+for epoch in range(epochs):
+# for epoch in tqdm(range(epochs), desc=f"Epochs"):
     train_loss_avg = 0
     model.train()
-    # for (profiles, fft_coef) in tqdm(train_loader, desc = f"Epoch {epoch}/{epochs}", leave = False):
-    for (profiles, fft_coef) in train_loader:
+    for (profiles, fft_coef) in tqdm(train_loader, desc = f"Epoch {epoch}/{epochs}", leave = False):
+    # for (profiles, fft_coef) in train_loader:
 
         profiles = profiles.to(device)
         fft_coef = fft_coef.to(device)
 
         # Forward pass
-        # Output of Autoencoder
         reconstructed = model(profiles)
 
         # Calculating the loss function
@@ -124,8 +139,8 @@ for epoch in tqdm(range(epochs), desc=f"Epochs"):
     test_loss_avg = 0
     model.eval()
     with torch.no_grad():
-        # for (profiles, fft_coef) in tqdm(test_loader, desc = "Epoch Validation {epoch}/{epochs}", leave = False):
-        for (profiles, fft_coef) in test_loader:
+        for (profiles, fft_coef) in tqdm(test_loader, desc = f"Epoch Validation {epoch}/{epochs}", leave = False):
+        # for (profiles, fft_coef) in test_loader:
 
             profiles = profiles.to(device)
             fft_coef = fft_coef.to(device)
@@ -146,7 +161,7 @@ for epoch in tqdm(range(epochs), desc=f"Epochs"):
     # Storing the losses in a list for plotting
     test_losses.append(test_loss_avg)
 
-    # print(f"Epoch {epoch}: Train Loss: {train_loss_avg:1.2e}, Test Loss: {test_loss_avg:1.2e}")
+    print(f"Epoch {epoch}: Train Loss: {train_loss_avg:1.2e}, Test Loss: {test_loss_avg:1.2e}, lr: {scheduler.get_last_lr()[0]:1.2e}")
 
     if (test_loss_avg < best_loss):
         best_loss = test_loss_avg
@@ -160,11 +175,11 @@ for epoch in tqdm(range(epochs), desc=f"Epochs"):
             # 'hyperparameters': hyperparameters,
             'optimizer': optimizer.state_dict()}
 
-        # print("Saving best model...")
-        filename = f'checkpoint_{time.strftime("%Y%m%d-%H%M%S")}'
-        torch.save(checkpoint, 'checkpoints/' + filename + '_best.pth')
+        print("Saving best model...")
+        filename = f'{basename}_{time.strftime("%Y%m%d-%H%M%S")}'
+        torch.save(checkpoint, f'{savedir}' + filename + '.pth')
 
-    # scheduler.step()
+    scheduler.step()
 
 # finished training
 end_time = time.time()
@@ -173,8 +188,8 @@ print('Training time: {}'.format(end_time - start_time))
 print('-'*50)
 
 print('Saving the model ...')
-filename = f'checkpoint_final_{time.strftime("%Y%m%d-%H%M%S")}'
-torch.save(checkpoint, 'checkpoints/' + filename + '.pth')
+filename = f'{basename}_{time.strftime("%Y%m%d-%H%M%S")}_final'
+torch.save(checkpoint, f'{savedir}' + filename + '.pth')
 print('Model saved!\n')
 print('-'*50)
 
@@ -190,7 +205,7 @@ plt.plot(train_losses)
 plt.plot(test_losses)
 plt.xscale('log')
 plt.yscale('log')
-plt.savefig(f'checkpoints/losses_{filename}.png')
+plt.savefig(f'{savedir}losses_{filename}.png')
 plt.close()
 
 # select a random sample from the test dataset and test the network
@@ -230,8 +245,8 @@ for i, indx in tqdm(enumerate(np.random.randint(0,test_dataset.n_samples,25))):
 # saving the plots
 print('Saving the plots ...\n')
 
-fig1.savefig(f'checkpoints/test_fft_{filename}.png', bbox_inches='tight')
+fig1.savefig(f'{savedir}test_fft_{filename}.png', bbox_inches='tight')
 plt.close(fig1)
 
-fig2.savefig(f'checkpoints/test_profile_{filename}.png', bbox_inches='tight')
+fig2.savefig(f'{savedir}test_profile_{filename}.png', bbox_inches='tight')
 plt.close(fig2)
