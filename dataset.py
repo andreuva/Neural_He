@@ -28,15 +28,16 @@ class profiles_dataset(torch.utils.data.Dataset):
         # Load the samples (separate the training and test data)
         self.data = np.array(data['parameters'][indices], dtype=np.float32)
         # Load the labels
-        self.labels = np.concatenate((data['fft_coeffs'][indices].real, data['fft_coeffs'][indices].imag), 
-                                     axis=-1, dtype=np.float32)
+        profiles = np.array(data['profiles'])
+        self.labels = np.array(profiles[indices], dtype=np.float32)
 
         # add the normalization factors to the dataset object
-        self.norm_fft = data['norm_fft']
+        self.profile_norm = 1e-8
         self.norm_param = data['norm_param']
+        self.labels = self.labels/self.profile_norm
 
         self.n_features = self.data.shape[1]
-        self.n_components = int(self.labels.shape[1]/2)
+        self.n_components = self.labels.shape[1]
         self.N_nus = len(data['nus'])
         self.nus = data['nus']
 

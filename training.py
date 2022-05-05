@@ -7,6 +7,7 @@ import torch
 from dataset import profiles_dataset
 from NN import EncoderDecoder
 import time, os
+from torchsummary import summary
 
 try:
     import nvidia_smi
@@ -18,15 +19,15 @@ except:
 readir = '../DATA/neural_he/spectra/'
 readfile = 'model_ready_flat_spectrum_100k.pkl'
 batch_size = 256
-epochs = 5000
-learning_rate = 1e-3
-step_size_scheduler = 333
-gamma_scheduler = 0.33
-smooth = 0.25
+epochs = 50
+learning_rate = 1e-2
+step_size_scheduler = 1000
+gamma_scheduler = 0.4
+smooth = 0.2
 
 # construct the base name to save the model
 basename = f'checkpoint_batch_{batch_size}.pth'
-savedir = f'./checkpoints_batch_sm_{batch_size}_{learning_rate}_{gamma_scheduler}/'
+savedir = f'./checkpoints_batch_drop_{batch_size}_{learning_rate}_{gamma_scheduler}/'
 # check if there is a folder for the checkpoints and create it if not
 if not os.path.exists(savedir):
     os.makedirs(savedir)
@@ -83,6 +84,7 @@ test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
 print('-'*50)
 print('Initializing the model ...\n')
 model = EncoderDecoder(dataset.n_components, dataset.n_features).to(device)
+summary(model, (1, dataset.n_features), batch_size=batch_size)
 
 # Validation using MSE Loss function
 loss_function = torch.nn.MSELoss()
@@ -108,17 +110,17 @@ for epoch in range(epochs):
 # for epoch in tqdm(range(epochs), desc=f"Epochs"):
     train_loss_avg = 0
     model.train()
-    for (profiles, fft_coef) in tqdm(train_loader, desc = f"Epoch {epoch}/{epochs}", leave = False):
-    # for (profiles, fft_coef) in train_loader:
+    for (params, profiles) in tqdm(train_loader, desc = f"Epoch {epoch}/{epochs}", leave = False):
+    # for (params, profiles) in train_loader:
 
+        params = params.to(device)
         profiles = profiles.to(device)
-        fft_coef = fft_coef.to(device)
 
         # Forward pass
-        reconstructed = model(profiles)
+        reconstructed = model(params)
 
         # Calculating the loss function
-        train_loss = loss_function(reconstructed, fft_coef)
+        train_loss = loss_function(reconstructed, profiles)
 
         # The gradients are set to zero,
         # the the gradient is computed and stored.
@@ -139,18 +141,18 @@ for epoch in range(epochs):
     test_loss_avg = 0
     model.eval()
     with torch.no_grad():
-        for (profiles, fft_coef) in tqdm(test_loader, desc = f"Epoch Validation {epoch}/{epochs}", leave = False):
-        # for (profiles, fft_coef) in test_loader:
+        for (params, profiles) in tqdm(test_loader, desc = f"Epoch Validation {epoch}/{epochs}", leave = False):
+        # for (params, profiles) in test_loader:
 
+            params = params.to(device)
             profiles = profiles.to(device)
-            fft_coef = fft_coef.to(device)
 
             # Forward pass
             # Output of Autoencoder
-            reconstructed = model(profiles)
+            reconstructed = model(params)
 
             # Calculating the loss function
-            test_loss = loss_function(reconstructed, fft_coef)
+            test_loss = loss_function(reconstructed, profiles)
 
             # Compute smoothed loss
             if (test_loss_avg == 0):
@@ -193,7 +195,6 @@ torch.save(checkpoint, f'{savedir}' + filename + '.pth')
 print('Model saved!\n')
 print('-'*50)
 
-
 # # Defining the Plot Style
 # plt.style.use('fivethirtyeight')
 plt.figure(figsize=(12, 8), dpi=150)
@@ -211,42 +212,19 @@ plt.close()
 # select a random sample from the test dataset and test the network
 # then plot the predicted output and the ground truth
 print('Ploting and saving Intiensities from the sampled populations from the test data ...\n')
-fig1, ax1 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
 fig2, ax2 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
 
 for i, indx in tqdm(enumerate(np.random.randint(0,test_dataset.n_samples,25))):
-    params, fft_coef = test_dataset[indx]
+    params, profiles = test_dataset[indx]
 
-    fft_imag = np.zeros(test_dataset.n_components, dtype=np.complex64)
-    fft_imag.real = fft_coef[:test_dataset.n_components]
-    fft_imag.imag = fft_coef[test_dataset.n_components:]
-    fft_imag = fft_imag*test_dataset.norm_fft
+    reconstructed = model.forward(torch.tensor(params).to(device))
+    reconstructed = reconstructed.detach().cpu().numpy()
 
-    profile = np.fft.irfft(fft_imag, n=test_dataset.N_nus)
-
-    fft_rec = model.forward(torch.tensor(params).to(device))
-    fft_rec = fft_rec.detach().cpu().numpy()
-
-    fft_rec_imag = np.zeros(test_dataset.n_components, dtype=np.complex64)
-    fft_rec_imag.real = fft_rec[:test_dataset.n_components]
-    fft_rec_imag.imag = fft_rec[test_dataset.n_components:]
-    fft_rec_imag = fft_rec_imag*test_dataset.norm_fft
-
-    reconstructed = np.fft.irfft(fft_rec_imag, n=test_dataset.N_nus)
-
-    ax1.flat[i].plot(fft_coef[:test_dataset.n_components], '--', color='C0')
-    ax1.flat[i].plot(fft_coef[test_dataset.n_components:], color='C0')
-    ax1.flat[i].plot(fft_rec[:test_dataset.n_components], '--', color='C1')
-    ax1.flat[i].plot(fft_rec[test_dataset.n_components:], color='C1')
-
-    ax2.flat[i].plot(test_dataset.nus, profile, color='C0')
+    ax2.flat[i].plot(test_dataset.nus, profiles, color='C0')
     ax2.flat[i].plot(test_dataset.nus, reconstructed, color='C1')
 
 # saving the plots
 print('Saving the plots ...\n')
-
-fig1.savefig(f'{savedir}test_fft_{filename}.png', bbox_inches='tight')
-plt.close(fig1)
 
 fig2.savefig(f'{savedir}test_profile_{filename}.png', bbox_inches='tight')
 plt.close(fig2)
