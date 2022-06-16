@@ -1,6 +1,3 @@
-from select import select
-from pyparsing import col
-from scipy.__config__ import show
 from sklearn.decomposition import PCA
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures, SplineTransformer
@@ -15,29 +12,23 @@ Function to load the data from the file, extract the data of the frequencies and
 and reshape from (n_x, n_y, n_freq) to (n_x*n_y, n_freq) and normalize it
 """
 def load_data(path):
-    # open the file containing the data (I,Q,U,V and frequency)
-    with open(path, 'rb') as f:
-        data = pkl.load(f)
+    # open the file containing the parameters data
+    with open(f'{path}parameters.pkl', 'rb') as f:
+        parameters = pkl.load(f)
 
-    # extract the data of the frequencies and the different spectra in intensity
-    freq = data[0]['lambda']
-    intensities = data[0]['data'][0]
-    # reshape from (n_x, n_y, n_freq) to (n_x*n_y, n_freq)
-    intensities = np.reshape(intensities, (intensities.shape[0]*intensities.shape[1], intensities.shape[2]))
-    # normalize the data
-    intensities = (intensities - np.mean(intensities))/np.std(intensities)
-
-    return freq, intensities
+    with open(f'{path}profiles.pkl', 'rb') as f:
+        profiles = pkl.load(f)
+    
+    return parameters, profiles
 
 
 """ 
 Function to plot the data of the different spectra in intensity
 """
-def plot_data(freq, intensities, color='b', show=False):
+def plot_data(freq, profiles, color='b', show=False):
     # plot some random spectra in intensity
-    
-    for spectra in intensities:
-        plt.plot(freq, spectra, color)
+    for profile in profiles:
+        plt.plot(freq, profile, color)
 
     if show: plt.show()
 
@@ -46,65 +37,25 @@ def plot_data(freq, intensities, color='b', show=False):
 Function to compress the spectra extracting the most
 important features and reconstructing the spectra
 """
-def compress_spectra_pca(freq, intensities, intensities_test, n_components, n_show=3):
+def compress_spectra_pca(freq, profiles, profiles_test, n_components):
     # perform the PCA
     pca = PCA(n_components=n_components)
-    pca.fit(intensities)
+    pca.fit(profiles)
     # decompose the test spectra
-    compressed = pca.transform(intensities_test)
+    compressed = pca.transform(profiles_test)
     # reconstruct the spectra
     reconstructed = pca.inverse_transform(compressed)  
     
     return pca, reconstructed
 
-""" 
-Function to extract the coefficients of the polynomial of degree n
-to reconstruct the spectra using the polynomial coefficients and the frequencies
-"""
-def compress_spectra_poly(freq, intensities, n_components):
-    # construct the model
-    model = make_pipeline(PolynomialFeatures(n_components), Ridge(alpha=1e-3))
-    # reshape the data to feed the model
-    freq_fit = np.reshape(freq, (-1,1))
-    freq_fit = freq_fit - freq_fit.min()
-    reconstructed = []
-    models = []
-
-    for spectra in intensities:
-        # perform the polynomial regression
-        models.append(model.fit(freq_fit, spectra))
-        reconstructed.append(model.predict(freq_fit))
-
-    return models, np.array(reconstructed)
-
-
-"""
-Function to extract the coefficients of the spline of degree n
-to reconstruct the spectra using the spline coefficients and the frequencies
-"""
-def compress_spectra_spline(freq, intensities, n_components):
-    # construct the model
-    model = make_pipeline(SplineTransformer(n_components), Ridge(alpha=1e-3))
-    # reshape the data to feed the model
-    freq_fit = np.reshape(freq, (-1,1))
-    # freq_fit = freq_fit - freq_fit.min()
-    reconstructed = []
-    models = []
-
-    for spectra in intensities:
-        # perform the spline regression
-        models.append(model.fit(freq_fit, spectra))
-        reconstructed.append(model.predict(freq_fit))
-
-    return models, np.array(reconstructed)
 
 """ 
 Function to extract the most importat fourier coefficients of the spectra
 and reconstruct the spectra using the fourier coefficients and the frequencies
 """
-def compress_spectra_fft(freq, intensities, n_components):
+def compress_spectra_fft(freq, profiles, n_components):
     # perform the fft
-    fft = np.fft.rfft(intensities, axis=1)
+    fft = np.fft.rfft(profiles, axis=1)
     # extract the coefficients
     fft_coeff = fft[:,:n_components]
     # reconstruct the spectra
@@ -115,40 +66,90 @@ def compress_spectra_fft(freq, intensities, n_components):
 
     return fft_coeff, reconstructed
 
+
+""" 
+Function to the spectra in wavelets and reconstruct the spectra using the coefficients
+and the frequencies
+"""
+def compress_spectra_wav(freq, profiles, n_components):
+
+    wav_coeff = freq*0
+    reconstructed = wav_coeff*0
+
+    return wav_coeff, reconstructed
+
+
 if __name__ == "__main__":
+    
+    """ 
+    test = False
+    # load the test data
+    if test:
+        parameters_test, profiles_test = load_data('tests/test_amplitudes_')
+        profiles_test = [profiles_test[i]['eta_I'] for i in range(len(profiles_test))]
+        params_test = [[param['B'], param['ray_out'][0][0], param['ray_out'][0][1],       # Geometry and mag. field
+                        param['a_voigt'], param['temp'],                                  # Thermal parameters
+                        param['JKQ_1'][0][0], param['JKQ_1'][1][0], param['JKQ_1'][2][0],
+                        param['JKQ_1'][1][1].real, param['JKQ_1'][2][1].real, param['JKQ_1'][2][2].real,
+                        param['JKQ_1'][1][1].imag, param['JKQ_1'][2][1].imag, param['JKQ_1'][2][2].imag] # Radiation field
+                        for param in parameters_test]
+        params_test = np.array(params_test)
+        nus = profiles_test[0]['nus']
+        fft_coeffs_tests, reconstructed_ffts_test = compress_spectra_fft(nus, profiles_test, 50)
+    """
     # load the data from the file
-    freq, intensities = load_data('data/spectra/raw_data.pkl')
+    parameters, profiles = load_data('data_20220322_191501/')
 
     # extract a subsample of the data to test
     np.random.seed(7777)
-    test_selection = np.random.randint(0, intensities.shape[0], size=3)
-    intensities_test = intensities[test_selection, :]
+    profiles_selec = np.random.randint(0, len(profiles), size=3)
+    profiles_selec = [profiles[i]['eta_I'] for i in profiles_selec]
 
-    # plot the subset
-    plot_data(freq, intensities_test, show=True)
-    
+    # extract the frequencies and the profile in eta_I (first profile)
+    nus = profiles[0]['nus']
+    profiles = [profiles[i]['eta_I'] for i in range(len(profiles))]
+    # transform the parameters to save it into the dataset
+    params = [[param['B'], param['ray_out'][0][0], param['ray_out'][0][1],       # Geometry and mag. field
+               param['a_voigt'], param['temp'],                                  # Thermal parameters
+               param['JKQ_1'][0][0], param['JKQ_1'][1][0], param['JKQ_1'][2][0],
+               param['JKQ_1'][1][1].real, param['JKQ_1'][2][1].real, param['JKQ_1'][2][2].real,
+               param['JKQ_1'][1][1].imag, param['JKQ_1'][2][1].imag, param['JKQ_1'][2][2].imag] # Radiation field
+              for param in parameters]
+    params = np.array(params)
+
     # compress the data
-    pca_object, reconstructed_pca = compress_spectra_pca(freq, intensities, intensities_test, n_components=15)  
-    poly_models, reconstructed_poly = compress_spectra_poly(freq, intensities_test, 20)
-    spline_models, reconstructed_spline = compress_spectra_spline(freq, intensities_test, 20)
-    fft_coeff, reconstructed_fft = compress_spectra_fft(freq, intensities_test, 25)
+    pca_object, reconstructed_pca = compress_spectra_pca(nus, profiles, profiles_selec, n_components=30)  
+    fft_coeff, reconstructed_fft = compress_spectra_fft(nus, profiles_selec, 50)
+    # wav_coeff, reconstructed_wav = compress_spectra_wav(nus, profiles_selec, 50)
 
-    plot_data(freq, intensities_test, color='.b')
-    # plot_data(freq, reconstructed_poly, color='g')
-    # plot_data(freq, reconstructed_spline, color='pink')
-    plot_data(freq, reconstructed_fft, color='orange')
-    plot_data(freq, reconstructed_pca, color='r', show=True)
+    # show the reconstructed spectra using the PCA and the FFT
+    plot_data(nus, profiles_selec, color='.b')
+    plot_data(nus, reconstructed_fft, color='orange')
+    # plot_data(nus, reconstructed_wav, color='g')
+    plot_data(nus, reconstructed_pca, color='r', show=True)
 
     # compute the fft coefficients of all the samples in the data
-    fft_coeffs, reconstructed_ffts = compress_spectra_fft(freq, intensities, 25)
-    
+    fft_coeffs, reconstructed_ffts = compress_spectra_fft(nus, profiles, 50)
+
     # create a dictionary with the coefficients of the different models
     # and the instensities that are associated to each model
     models_dict = {
-        'intensities': intensities,
-        'fft_coeffs': fft_coeffs,
-                  }
+        'profiles'  : profiles,
+        'fft_coeffs': fft_coeffs/fft_coeffs.mean(),
+        'norm_fft'  : fft_coeffs.mean(),
+        'nus'       : nus,
+        'parameters': params/np.mean(params, axis=0),
+        'norm_param': np.mean(params, axis=0)}
 
     # save the coefficients to a pkl for training the encoder-decoder network
-    # with open('data/spectra/model_ready_data.pkl', 'wb') as f:
-    #     pkl.dump(models_dict, f)
+    with open('../DATA/neural_he/spectra/model_ready_flat_spectrum.pkl', 'wb') as f:
+        pkl.dump(models_dict, f)
+    '''
+    if test:
+        models_dict['profiles'] = profiles_test
+        models_dict['fft_coeffs'] = fft_coeffs_tests/fft_coeffs.mean()
+        models_dict['parameters'] = params_test/np.mean(params, axis=0)
+        # save the coefficients to a pkl for testing
+        with open('../DATA/neural_he/spectra/model_ready_test_amplitudes.pkl', 'wb') as f:
+            pkl.dump(models_dict, f)
+    '''
