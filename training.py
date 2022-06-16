@@ -19,15 +19,15 @@ except:
 readir = '../DATA/neural_he/spectra/'
 readfile = 'model_ready_flat_spectrum_100k.pkl'
 batch_size = 256
-epochs = 50
+epochs = 500
 learning_rate = 1e-2
 step_size_scheduler = 1000
-gamma_scheduler = 0.4
+gamma_scheduler = 0.6
 smooth = 0.2
 
 # construct the base name to save the model
 basename = f'checkpoint_batch_{batch_size}.pth'
-savedir = f'./checkpoints_batch_drop_{batch_size}_{learning_rate}_{gamma_scheduler}/'
+savedir = f'./checkpoints_batch_drop_{batch_size}_{learning_rate}_{gamma_scheduler}_time_{time.strftime("%Y%m%d-%H%M%S")}/'
 # check if there is a folder for the checkpoints and create it if not
 if not os.path.exists(savedir):
     os.makedirs(savedir)
