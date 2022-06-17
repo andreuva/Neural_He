@@ -26,9 +26,23 @@ def kaiming_init(m):
 
 class MLPConditioning(nn.Module):
     def __init__(self, n_input, n_output, n_hidden=1, n_hidden_layers=1, activation=nn.Tanh(), bias=True):
-        """
-        Simple fully connected network
-        """
+        """Simple fully connected network used for conditioning, returning two heads
+
+        Parameters
+        ----------
+        n_input : int
+            Number of input neurons
+        n_output : int
+            Number of output neurons
+        n_hidden : int, optional
+            number of neurons per hidden layers, by default 1
+        n_hidden_layers : int, optional
+            Number of hidden layers, by default 1        
+        activation : _type_, optional
+            Activation function to be used at each layer, by default nn.Tanh()
+        bias : bool, optional
+            Include bias or not, by default True        
+        """                
         super(MLPConditioning, self).__init__()
 
         self.layers = nn.ModuleList([])
@@ -64,8 +78,24 @@ class MLPConditioning(nn.Module):
 
 class MLP(nn.Module):
     def __init__(self, n_input, n_output, n_hidden=1, n_hidden_layers=1, activation=nn.Tanh(), bias=True, final_activation=nn.Identity()):
-        """
-        Simple fully connected network
+        """Simple fully connected network, potentially including FiLM conditioning
+
+        Parameters
+        ----------
+        n_input : int
+            Number of input neurons
+        n_output : int
+            Number of output neurons
+        n_hidden : int, optional
+            number of neurons per hidden layers, by default 1
+        n_hidden_layers : int, optional
+            Number of hidden layers, by default 1        
+        activation : _type_, optional
+            Activation function to be used at each layer, by default nn.Tanh()
+        bias : bool, optional
+            Include bias or not, by default True
+        final_activation : _type_, optional
+            Final activation function at the last layer, by default nn.Identity()
         """
         super(MLP, self).__init__()
 
@@ -82,7 +112,11 @@ class MLP(nn.Module):
         self.layers.append(nn.Linear(n_hidden, n_output))
         
     def forward(self, x, gamma=None, beta=None):
+
+        # Apply all layers
         for layer in self.layers[0:-1]:
+
+            # Apply conditioning if present
             if (gamma is not None):
                 x = layer(x) * gamma + beta
             else:
@@ -102,35 +136,32 @@ class MLP(nn.Module):
             if (type == 'kaiming'):
                 kaiming_init(module)
 
-
-class Linear(nn.Module):
-    def __init__(self, n_input, n_output):
-        """
-        Simple fully connected network
-        """
-        super(Linear, self).__init__()
-        
-        self.layer = nn.Linear(n_input, n_output, bias=False)
-        
-    def forward(self, x, gamma=None, beta=None):
-        x = self.layer(x) * gamma + beta
-
-        return x
-
-    def weights_init(self, type='xavier'):
-        for module in self.modules():
-            if (type == 'xavier'):
-                xavier_init(module)
-            if (type == 'kaiming'):
-                kaiming_init(module)
-
-
 class MLPMultiFourier(nn.Module):
-    def __init__(self, n_input, n_output, n_hidden=1, n_hidden_layers=1, mapping_size=128, sigma=[3.0], activation=nn.Tanh(), bias=True, final_activation=nn.Identity()):
-        """
-        Simple fully connected network with random Fourier embedding with several frequencies
+    def __init__(self, n_input, n_output, n_hidden=1, n_hidden_layers=1, mapping_size=128, sigma=[3.0], activation=nn.Tanh(), bias=True, final_activation=nn.Identity()):        
+        """Simple fully connected network with random Fourier embedding with several frequencies
         arxiv:2012.10047
-        """
+
+        Parameters
+        ----------
+        n_input : int
+            Number of input neurons
+        n_output : int
+            Number of output neurons
+        n_hidden : int, optional
+            number of neurons per hidden layers, by default 1
+        n_hidden_layers : int, optional
+            Number of hidden layers, by default 1
+        mapping_size : int, optional
+            Size of the Fourier embedding applied at the beginning, by default 128
+        sigma : list, optional
+            List of standard deviations to be used for generating the Gaussian random matrix, by default [3.0]
+        activation : _type_, optional
+            Activation function to be used at each layer, by default nn.Tanh()
+        bias : bool, optional
+            Include bias or not, by default True
+        final_activation : _type_, optional
+            Final activation function at the last layer, by default nn.Identity()
+        """                
         super(MLPMultiFourier, self).__init__()
 
         self.n_scales = len(sigma)
@@ -155,20 +186,28 @@ class MLPMultiFourier(nn.Module):
         self.layers.append(nn.Linear(self.n_scales * n_hidden, n_output))
         
     def forward(self, x, gamma=None, beta=None):
-        # Fourier encoding
-                
+
+        # Random Fourier encoding                
         tmp = (2. * np.pi * x) @ torch.transpose(self.B, 1, 2) #.t()
+
+        # Compute cosine and sine of the frequencies
         tmp = torch.cat([torch.sin(tmp), torch.cos(tmp)], dim=-1)
 
+        # Apply the neural network to all sigmas simultaneously
         for layer in self.layers[0:-1]:
+
+            # Apply conditioning if available
             if (gamma is not None):
                 tmp = layer(tmp) * gamma + beta
             else:
                 tmp = layer(tmp)
 
             tmp = self.activation(tmp)
-                
+        
+        # Combine all frequencies
         tmp = torch.transpose(tmp, 0, 1).reshape(x.size(0), -1)
+
+        # Final layers
         tmp = self.layers[-1](tmp)
         tmp = self.final_activation(tmp)
 
