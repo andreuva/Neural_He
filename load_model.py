@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from dataset import profiles_dataset
-from NN import EncoderDecoder
+from NN import MLP
 from tqdm import tqdm
 from glob import glob
 import matplotlib.pyplot as plt
@@ -31,7 +31,7 @@ test_loader = torch.utils.data.DataLoader(dataset = dataset,
 # Load the checkpoint and initialize the model
 checkpoint = sorted(glob('checkpoints/checkpoint_*.pth'))[-1]
 checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
-model = EncoderDecoder(dataset.n_components, dataset.n_features).to(device)
+model = MLP(dataset.n_components, dataset.n_features).to(device)
 model.load_state_dict(checkpoint['state_dict'])
 
 reconstructed_profiles = []

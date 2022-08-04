@@ -1,12 +1,10 @@
-from email.mime import base
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.model_selection import learning_curve
 from tqdm import tqdm
 import torch
 from dataset import profiles_dataset
-from NN import EncoderDecoder
-import time, os
+from NN import MLP, SirenNet
+import time, os, glob
 from torchsummary import summary
 
 try:
@@ -16,18 +14,23 @@ except:
     NVIDIA_SMI = False
 
 
-readir = '../DATA/neural_he/spectra/'
-readfile = 'model_ready_flat_spectrum_100k.pkl'
+readir = sorted(glob.glob('../DATA/neural_he/spectra/*'))[-1] + '/'
+readfile = 'model_ready.pkl'
+
+# Network params
+dim_hidden = 128
+layers = 5
+
 batch_size = 256
-epochs = 500
-learning_rate = 1e-2
-step_size_scheduler = 1000
+epochs = 2500
+learning_rate = 1e-3
+step_size_scheduler = 250
 gamma_scheduler = 0.6
 smooth = 0.2
 
 # construct the base name to save the model
-basename = f'checkpoint_batch_{batch_size}.pth'
-savedir = f'./checkpoints_batch_drop_{batch_size}_{learning_rate}_{gamma_scheduler}_time_{time.strftime("%Y%m%d-%H%M%S")}/'
+basename = f'trained_model'
+savedir = f'./{basename}s_bs_{batch_size}_lr_{learning_rate}_gs_{gamma_scheduler}_time_{time.strftime("%Y%m%d-%H%M%S")}/'
 # check if there is a folder for the checkpoints and create it if not
 if not os.path.exists(savedir):
     os.makedirs(savedir)
@@ -71,9 +74,9 @@ print('Training and test sets are disjoint!\n')
 # DataLoader is used to load the dataset for training and testing
 print('Creating the training DataLoader ...')
 train_loader = torch.utils.data.DataLoader(dataset = dataset,
-									 batch_size = batch_size,
-									 shuffle = True,
-                                     pin_memory = True)
+                                           batch_size = batch_size,
+                                           shuffle = True,
+                                           pin_memory = True)
 print('Creating the test DataLoader ...')
 test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
                                           batch_size = batch_size,
@@ -83,7 +86,8 @@ test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
 # Model Initialization
 print('-'*50)
 print('Initializing the model ...\n')
-model = EncoderDecoder(dataset.n_components, dataset.n_features).to(device)
+model = MLP(dataset.n_components, dataset.n_features).to(device)
+# model = SirenNet(dim_in=dataset.n_features, dim_hidden=dim_hidden, dim_out=1, num_layers=layers).to(device)
 summary(model, (1, dataset.n_features), batch_size=batch_size)
 
 # Validation using MSE Loss function

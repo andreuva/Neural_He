@@ -1,6 +1,7 @@
 import numpy as np
 import pickle as pkl
 import matplotlib.pyplot as plt
+import glob
 
 
 """ 
@@ -31,11 +32,11 @@ def plot_data(freq, profiles, color='b', show=False):
 
 if __name__ == "__main__":
     # load the data from the file
-    folder = '../DATA/neural_he/spectra/'
+    folder = sorted(glob.glob('../DATA/neural_he/spectra/*'))[-1] + '/'
     parameters, profiles = load_data(folder)
 
     # extract a subsample of the data to test
-    np.random.seed(7777)
+    np.random.seed(777)
     profiles_selec = np.random.randint(0, len(profiles), size=3)
     profiles_selec = [profiles[i]['eta_I'] for i in profiles_selec]
 
@@ -56,7 +57,7 @@ if __name__ == "__main__":
     params = np.array(params)
 
     # show the reconstructed spectra using the PCA and the FFT
-    plot_data(nus, profiles_selec, color='.b')
+    plot_data(nus, profiles_selec, color='.b', show=True)
 
     # create a dictionary with the coefficients of the different models
     # and the instensities that are associated to each model

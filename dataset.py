@@ -32,7 +32,7 @@ class profiles_dataset(torch.utils.data.Dataset):
         self.labels = np.array(profiles[indices], dtype=np.float32)
 
         # add the normalization factors to the dataset object
-        self.profile_norm = 1e-8
+        self.profile_norm = 1e-10
         self.norm_param = data['norm_param']
         self.labels = self.labels/self.profile_norm
 

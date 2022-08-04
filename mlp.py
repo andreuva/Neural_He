@@ -241,3 +241,4 @@ if (__name__ == '__main__'):
     out = tmp(xin).squeeze().reshape((128, 128)).detach().numpy()
 
     pl.imshow(out)
+    pl.show()
