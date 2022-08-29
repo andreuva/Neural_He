@@ -22,11 +22,11 @@ dim_hidden = 128
 layers = 5
 
 batch_size = 256
-epochs = 2500
+epochs = 1000
 learning_rate = 1e-3
-step_size_scheduler = 250
-gamma_scheduler = 0.6
-smooth = 0.2
+step_size_scheduler = 100
+gamma_scheduler = 0.5
+smooth = 0.3
 
 # construct the base name to save the model
 basename = f'trained_model'
@@ -86,8 +86,8 @@ test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
 # Model Initialization
 print('-'*50)
 print('Initializing the model ...\n')
-model = MLP(dataset.n_components, dataset.n_features).to(device)
-# model = SirenNet(dim_in=dataset.n_features, dim_hidden=dim_hidden, dim_out=1, num_layers=layers).to(device)
+# model = SirenNet(dataset.n_components,  dataset.n_features).to(device)
+model = SirenNet(dim_in=dataset.n_features, dim_hidden=dim_hidden, dim_out=375, num_layers=layers).to(device)
 summary(model, (1, dataset.n_features), batch_size=batch_size)
 
 # Validation using MSE Loss function
