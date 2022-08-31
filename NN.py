@@ -37,7 +37,7 @@ class MLP(torch.nn.Module):
             torch.nn.LeakyReLU(),
             torch.nn.Dropout(p=0.2),
             torch.nn.Linear(128, n_components),
-            torch.nn.LeakyReLU())
+            torch.nn.Identity())
 
     def forward(self, x):
         return  self.decoder(x)    # decoded

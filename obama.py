@@ -34,7 +34,7 @@ loss_L2 = nn.MSELoss().to(device)
 
 xin = torch.tensor(np.vstack([X.flatten(), Y.flatten()]).T.astype('float32')).to(device)
 
-for epoch in range(100):
+for epoch in range(1000):
     optimizer.zero_grad()
 
     out = tmp(xin)

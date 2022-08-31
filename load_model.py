@@ -1,3 +1,4 @@
+from cProfile import run
 import numpy as np
 import torch
 from dataset import profiles_dataset
@@ -19,8 +20,11 @@ else:
     print(device)
 
 
+readir = sorted(glob('../DATA/neural_he/spectra/*'))[-2] + '/'
+readfile = 'model_ready.pkl'
 # create the dataset to test
-dataset = profiles_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum_100k.pkl', train=False)
+dataset = profiles_dataset(f'{readir}{readfile}', train=False)
+# dataset = profiles_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum_100k.pkl', train=False)
 
 # DataLoader is used to load the dataset
 test_loader = torch.utils.data.DataLoader(dataset = dataset,
@@ -29,7 +33,10 @@ test_loader = torch.utils.data.DataLoader(dataset = dataset,
                                           pin_memory = True)
 
 # Load the checkpoint and initialize the model
-checkpoint = sorted(glob('checkpoints/checkpoint_*.pth'))[-1]
+run_loaded = sorted(glob('trained_*/'))[1]
+print(f'Loading the model from {run_loaded}')
+checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-1]
+print(f'Loading the checkpoint {checkpoint}')
 checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
 model = MLP(dataset.n_components, dataset.n_features).to(device)
 model.load_state_dict(checkpoint['state_dict'])
@@ -39,42 +46,25 @@ reconstructed_profiles = []
 # predict the test data with the loaded model
 model.eval()
 with torch.no_grad():
-    for (params, fft_coef) in tqdm(test_loader):
+    for (params, profile) in tqdm(test_loader):
         params = params.to(device)
-        # fft_coef = fft_coef.to(device)
 
         prediction = model(params)
         prediction = prediction.detach().cpu().numpy()
         params = params.detach().cpu().numpy()
-        # fft_coef = fft_coef.detach().cpu().numpy()
+        profile = profile.detach().cpu().numpy()
 
         prediction = np.squeeze(prediction)
         params = np.squeeze(params)
-        fft_coef = np.squeeze(fft_coef)
-
-        fft_rec_imag = np.zeros(dataset.n_components, dtype=np.complex64)
-        fft_rec_imag.real = prediction[:dataset.n_components]
-        fft_rec_imag.imag = prediction[dataset.n_components:]
-        fft_rec_imag = fft_rec_imag*dataset.norm_fft
-        reconstructed = np.fft.irfft(fft_rec_imag, n=dataset.N_nus)
-
-        fft_imag = np.zeros(dataset.n_components, dtype=np.complex64)
-        fft_imag.real = fft_coef[:dataset.n_components]
-        fft_imag.imag = fft_coef[dataset.n_components:]
-        fft_imag = fft_imag*dataset.norm_fft
-        profile = np.fft.irfft(fft_imag, n=dataset.N_nus)
+        profile = np.squeeze(profile)
 
         # save the reconstructed profile to a variable
-        reconstructed_profiles.append([params, fft_rec_imag, fft_imag, reconstructed, profile])
+        reconstructed_profiles.append([params, profile, prediction])
 
-profiles = np.array([iterat[-1] for iterat in reconstructed_profiles])
+profiles = np.array([iterat[-2] for iterat in reconstructed_profiles])
 profiles = np.squeeze(profiles)
-reconstructions = np.array([iterat[-2] for iterat in reconstructed_profiles])
+reconstructions = np.array([iterat[-1] for iterat in reconstructed_profiles])
 reconstructions = np.squeeze(reconstructions)
-fft_coefs = np.array([iterat[2] for iterat in reconstructed_profiles])
-fft_coefs = np.squeeze(fft_coefs)
-fft_recons = np.array([iterat[1] for iterat in reconstructed_profiles])
-fft_recons = np.squeeze(fft_recons)
 
 for i in range(10):
     plt.plot(profiles[i],'.', label='original')
@@ -88,5 +78,5 @@ for i in range(len(profiles)):
 
 plt.xscale('log')
 plt.yscale('log')
-plt.savefig('data_20220324_104926/reconstruction_comparison.png')
+plt.savefig('reconstruction_comparison.png')
 plt.close()
