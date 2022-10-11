@@ -31,11 +31,6 @@ class profiles_dataset(torch.utils.data.Dataset):
         profiles = np.array(data['profiles'])
         self.labels = np.array(profiles[indices], dtype=np.float32)
 
-        # add the normalization factors to the dataset object
-        self.profile_norm = 1e-10
-        self.norm_param = data['norm_param']
-        self.labels = self.labels/self.profile_norm
-
         self.n_features = self.data.shape[1]
         self.n_components = self.labels.shape[1]
         self.N_nus = len(data['nus'])

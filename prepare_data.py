@@ -32,17 +32,17 @@ def plot_data(freq, profiles, color='b', show=False):
 
 if __name__ == "__main__":
     # load the data from the file
-    folder = sorted(glob.glob('../DATA/neural_he/spectra/*'))[-1] + '/'
+    folder = sorted(glob.glob('../DATA/neural_he/spectra/data*'))[-1] + '/'
     parameters, profiles = load_data(folder)
 
     # extract a subsample of the data to test
-    np.random.seed(777)
-    profiles_selec = np.random.randint(0, len(profiles), size=3)
-    profiles_selec = [profiles[i]['eta_I'] for i in profiles_selec]
+    # np.random.seed(777)
+    # profiles_selec = np.random.randint(0, len(profiles), size=3)
+    # profiles_selec = [profiles[i]['eta_I'] for i in profiles_selec]
 
     # extract the frequencies and the profile in eta_I (first profile)
     nus = profiles[0]['nus']
-    profiles = [profiles[i]['eta_I'] for i in range(len(profiles))]
+    profiles = np.array([profiles[i]['eta_I'] for i in range(len(profiles))])
     # transform the parameters to save it into the dataset
     params = [[param['B'], param['B_inc'], param['B_inc'],
                param['mu'], param['chi'],
@@ -57,15 +57,16 @@ if __name__ == "__main__":
     params = np.array(params)
 
     # show the reconstructed spectra using the PCA and the FFT
-    plot_data(nus, profiles_selec, color='.b', show=True)
+    # plot_data(nus, profiles_selec, color='.b', show=True)
 
     # create a dictionary with the coefficients of the different models
     # and the instensities that are associated to each model
     models_dict = {
         'profiles'  : profiles,
         'nus'       : nus,
-        'parameters': params/np.mean(params, axis=0),
-        'norm_param': np.mean(params, axis=0)}
+        'parameters': params,
+        # 'norm_param': np.mean(params, axis=0)
+        }
 
     # save the coefficients to a pkl for training the encoder-decoder network
     with open(f'{folder}model_ready.pkl', 'wb') as f:

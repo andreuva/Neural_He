@@ -15,18 +15,19 @@ except:
     NVIDIA_SMI = False
 
 
-readir = sorted(glob.glob('../DATA/neural_he/spectra/*'))[-1] + '/'
-readfile = 'model_ready.pkl'
+readir = '../DATA/neural_he/spectra/'   # sorted(glob.glob('../DATA/neural_he/spectra/*'))[-1]
+readfile = 'model_ready_1M_normaliced.pkl'
+print('Reading data from: ', readir + readfile)
 
 # Network params
 dim_hidden = 128
 layers = 5
 
 batch_size = 256
-epochs = 150
-learning_rate = 1e-3
+epochs = 200
+learning_rate = 1e-2
 step_size_scheduler = 25
-gamma_scheduler = 0.5
+gamma_scheduler = 0.1
 smooth = 0.2
 
 # construct the base name to save the model
@@ -212,7 +213,7 @@ plt.ylabel('Loss')
 # Plotting the last 100 values
 plt.plot(train_losses)
 plt.plot(test_losses)
-plt.xscale('log')
+# plt.xscale('log')
 plt.yscale('log')
 plt.savefig(f'{savedir}losses_{filename}.png')
 plt.close()

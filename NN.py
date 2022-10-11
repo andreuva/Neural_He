@@ -115,8 +115,7 @@ class SirenNet(nn.Module):
                 dim_out = dim_hidden,
                 w0 = layer_w0,
                 use_bias = use_bias,
-                is_first = is_first
-            ))
+                is_first = is_first))
 
         self.last_layer = Siren(dim_in = dim_hidden, dim_out = dim_out, w0 = w0, use_bias = use_bias, activation = final_activation)
 
