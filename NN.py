@@ -1,7 +1,8 @@
 import torch
 from torch import nn
 import math
-import torch.nn.functional as F
+import torch.nn.functional as funct
+
 
 class MLP(torch.nn.Module):
     def __init__(self, n_components, n_features):
@@ -14,29 +15,29 @@ class MLP(torch.nn.Module):
         self.decoder = torch.nn.Sequential(
             torch.nn.Linear(n_features, 36),
             torch.nn.LeakyReLU(),
-            torch.nn.Dropout(p=0.05),
+            # torch.nn.Dropout(p=0.05),
             torch.nn.Linear(36, 64),
             torch.nn.LeakyReLU(),
-            torch.nn.Dropout(p=0.1),
+            # torch.nn.Dropout(p=0.1),
             torch.nn.Linear(64, 128),
             torch.nn.LeakyReLU(),
-            torch.nn.Dropout(p=0.15),
+            # torch.nn.Dropout(p=0.15),
             torch.nn.Linear(128, 256),
             torch.nn.LeakyReLU(),
-            torch.nn.Dropout(p=0.2),
+            # torch.nn.Dropout(p=0.2),
             torch.nn.Linear(256, 512),
             torch.nn.LeakyReLU(),
-            torch.nn.Dropout(p=0.25),
+            # torch.nn.Dropout(p=0.25),
             torch.nn.Linear(512, 512),
             torch.nn.LeakyReLU(),
-            torch.nn.Dropout(p=0.3),
-            torch.nn.Linear(512, 256),
+            # torch.nn.Dropout(p=0.3),
+            torch.nn.Linear(512, 512),
             torch.nn.LeakyReLU(),
-            torch.nn.Dropout(p=0.25),
-            torch.nn.Linear(256, 128),
+            # torch.nn.Dropout(p=0.3),
+            torch.nn.Linear(512, 512),
             torch.nn.LeakyReLU(),
-            torch.nn.Dropout(p=0.2),
-            torch.nn.Linear(128, n_components),
+            # torch.nn.Dropout(p=0.3),
+            torch.nn.Linear(512, n_components),
             torch.nn.Identity())
 
     def forward(self, x):
@@ -85,7 +86,7 @@ class Siren(nn.Module):
             bias.uniform_(-w_std, w_std)
 
     def forward(self, x, gamma = None, beta = None):
-        out =  F.linear(x, self.weight, self.bias)
+        out =  funct.linear(x, self.weight, self.bias)
 
         # FiLM modulation
         

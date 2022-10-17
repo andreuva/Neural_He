@@ -14,25 +14,25 @@ try:
 except:
     NVIDIA_SMI = False
 
-
+coefficient = 'eta_I'
 readir = '../DATA/neural_he/spectra/'   # sorted(glob.glob('../DATA/neural_he/spectra/*'))[-1]
-readfile = 'model_ready_1M_normaliced.pkl'
+readfile = f'model_ready_1M_{coefficient}_normaliced.pkl'
 print('Reading data from: ', readir + readfile)
 
 # Network params
 dim_hidden = 128
 layers = 5
 
-batch_size = 256
-epochs = 200
-learning_rate = 1e-2
-step_size_scheduler = 25
-gamma_scheduler = 0.1
-smooth = 0.2
+batch_size = 512
+epochs = 250
+learning_rate = 1e-1/3
+step_size_scheduler = 20
+gamma_scheduler = 1/3
+smooth = 0.8
 
 # construct the base name to save the model
 basename = f'trained_model'
-savedir = f'./{basename}s_bs_{batch_size}_lr_{learning_rate}_gs_{gamma_scheduler}_time_{time.strftime("%Y%m%d-%H%M%S")}/'
+savedir = f'./{basename}s_{coefficient}_bs_{batch_size}_lr_{learning_rate}_gs_{gamma_scheduler}_time_{time.strftime("%Y%m%d-%H%M%S")}/'
 # check if there is a folder for the checkpoints and create it if not
 if not os.path.exists(savedir):
     os.makedirs(savedir)
@@ -100,6 +100,7 @@ loss_function = torch.nn.MSELoss()
 
 # Using an Adam Optimizer with learning rate scheduler
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+# optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
                                             step_size=step_size_scheduler,
                                             gamma=gamma_scheduler)

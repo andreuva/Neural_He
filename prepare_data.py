@@ -2,6 +2,7 @@ import numpy as np
 import pickle as pkl
 import matplotlib.pyplot as plt
 import glob
+import os
 
 
 """ 
@@ -32,42 +33,52 @@ def plot_data(freq, profiles, color='b', show=False):
 
 if __name__ == "__main__":
     # load the data from the file
-    folder = sorted(glob.glob('../DATA/neural_he/spectra/data*'))[-1] + '/'
-    parameters, profiles = load_data(folder)
+    folders = sorted(glob.glob('../DATA/neural_he/spectra/data*'))
+    for folder in folders:
+        # if the folder is not actually a folder (is a file) move to the next
+        if not os.path.isdir(folder):
+            continue
+        folder = folder + '/'
+        print(f'Loading data from {folder}')
 
-    # extract a subsample of the data to test
-    # np.random.seed(777)
-    # profiles_selec = np.random.randint(0, len(profiles), size=3)
-    # profiles_selec = [profiles[i]['eta_I'] for i in profiles_selec]
+        parameters, profiles = load_data(folder)
+        # transform the parameters to save it into the dataset
+        params = [[param['B'], param['B_inc'], param['B_inc'],
+                param['mu'], param['chi'],
+                param['a_voigt'], param['temp'],                                  # Thermal parameters
+                param['JKQr'][0][0], param['JKQr'][1][0], param['JKQr'][2][0],
+                param['JKQr'][1][1].real, param['JKQr'][2][1].real, param['JKQr'][2][2].real,
+                param['JKQr'][1][1].imag, param['JKQr'][2][1].imag, param['JKQr'][2][2].imag,
+                param['JKQb'][0][0], param['JKQb'][1][0], param['JKQb'][2][0],
+                param['JKQb'][1][1].real, param['JKQb'][2][1].real, param['JKQb'][2][2].real,
+                param['JKQb'][1][1].imag, param['JKQb'][2][1].imag, param['JKQb'][2][2].imag] # Radiation field
+                for param in parameters]
+        params = np.array(params)
+        nus = profiles[0]['nus']
 
-    # extract the frequencies and the profile in eta_I (first profile)
-    nus = profiles[0]['nus']
-    profiles = np.array([profiles[i]['eta_I'] for i in range(len(profiles))])
-    # transform the parameters to save it into the dataset
-    params = [[param['B'], param['B_inc'], param['B_inc'],
-               param['mu'], param['chi'],
-               param['a_voigt'], param['temp'],                                  # Thermal parameters
-               param['JKQr'][0][0], param['JKQr'][1][0], param['JKQr'][2][0],
-               param['JKQr'][1][1].real, param['JKQr'][2][1].real, param['JKQr'][2][2].real,
-               param['JKQr'][1][1].imag, param['JKQr'][2][1].imag, param['JKQr'][2][2].imag,
-               param['JKQb'][0][0], param['JKQb'][1][0], param['JKQb'][2][0],
-               param['JKQb'][1][1].real, param['JKQb'][2][1].real, param['JKQb'][2][2].real,
-               param['JKQb'][1][1].imag, param['JKQb'][2][1].imag, param['JKQb'][2][2].imag] # Radiation field
-               for param in parameters]
-    params = np.array(params)
+        for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']:
+            # extract a subsample of the data to test
+            # np.random.seed(777)
+            # profiles_selec = np.random.randint(0, len(profiles), size=3)
+            # profiles_selec = [profiles[i]['eta_I'] for i in profiles_selec]
 
-    # show the reconstructed spectra using the PCA and the FFT
-    # plot_data(nus, profiles_selec, color='.b', show=True)
+            # extract the frequencies and the profile in eta_I (first profile)
+            component = np.array([profiles[i][coefficient] for i in range(len(profiles))])
 
-    # create a dictionary with the coefficients of the different models
-    # and the instensities that are associated to each model
-    models_dict = {
-        'profiles'  : profiles,
-        'nus'       : nus,
-        'parameters': params,
-        # 'norm_param': np.mean(params, axis=0)
-        }
+            # show the reconstructed spectra using the PCA and the FFT
+            # plot_data(nus, profiles_selec, color='.b', show=True)
 
-    # save the coefficients to a pkl for training the encoder-decoder network
-    with open(f'{folder}model_ready.pkl', 'wb') as f:
-        pkl.dump(models_dict, f)
+            # create a dictionary with the coefficients of the different models
+            # and the instensities that are associated to each model
+            models_dict = {
+                'profiles'  : component,
+                'nus'    : nus,
+                'params' : params,
+                }
+
+            print(f'Saving data to {folder}model_ready_{coefficient}.pkl')
+            # save the coefficients to a pkl for training the encoder-decoder network
+            with open(f'{folder}model_ready_{coefficient}.pkl', 'wb') as f:
+                pkl.dump(models_dict, f)
+            
+        del models_dict, profiles, parameters, params, nus, component

@@ -12,7 +12,7 @@ class profiles_dataset(torch.utils.data.Dataset):
             data = pkl.load(f)
 
         # Compute the number of samples for the training and test sets
-        self.n_samples = len(data['parameters'])
+        self.n_samples = len(data['params'])
         if train:
             start = 0
             self.n_samples = int(self.n_samples * train_split)
@@ -26,7 +26,7 @@ class profiles_dataset(torch.utils.data.Dataset):
         self.indices = indices
 
         # Load the samples (separate the training and test data)
-        self.data = np.array(data['parameters'][indices], dtype=np.float32)
+        self.data = np.array(data['params'][indices], dtype=np.float32)
         # Load the labels
         profiles = np.array(data['profiles'])
         self.labels = np.array(profiles[indices], dtype=np.float32)

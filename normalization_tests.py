@@ -2,10 +2,10 @@ import numpy as np
 import pickle as pkl
 import matplotlib.pyplot as plt
 
-with open('../DATA/neural_he/spectra/data_20220901_152322/model_ready.pkl', 'rb') as f:
+with open('../DATA/neural_he/spectra/data_20220901_152322/model_ready_eta_I.pkl', 'rb') as f:
     data_1 = pkl.load(f)
 
-params = data_1['parameters']
+params = data_1['params']
 
 params_normmax = (params/np.abs(params).max(axis=0))
 # params_logmax = np.log10(params/np.abs(params).max(axis=0) + 1e-20)
@@ -17,9 +17,6 @@ params_logmax_sign_mean = np.where(params_normmax <=0, -np.log10(-params_normmax
 params_minmax = (params - params.min(axis=0))/(params.max(axis=0) - params.min(axis=0))
 params_normaliced = params_logmax_sign_mean
 params_normaliced[:,0:7] = params_minmax[:,0:7]
-
-
-
 
 
 # fig2, ax2 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
@@ -49,5 +46,6 @@ params_normaliced[:,0:7] = params_minmax[:,0:7]
 fig2, ax2 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
 for i in range(params.shape[1]):
     ax2.flat[i].hist(params_normaliced[:,i], density=True, bins=100)
-plt.savefig('params_normaliced.png')
-plt.close()
+# plt.savefig('params_normaliced.png')
+# plt.close()
+plt.show()
