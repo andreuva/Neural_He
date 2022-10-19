@@ -31,12 +31,14 @@ class MLP(torch.nn.Module):
             torch.nn.Linear(512, 512),
             torch.nn.LeakyReLU(),
             # torch.nn.Dropout(p=0.3),
-            torch.nn.Linear(512, 512),
+            torch.nn.Linear(512, 1024),
+            torch.nn.LeakyReLU(),
+            # torch.nn.Dropout(p=0.3),
+            torch.nn.Linear(1024, 512),
             torch.nn.LeakyReLU(),
             # torch.nn.Dropout(p=0.3),
             torch.nn.Linear(512, 512),
             torch.nn.LeakyReLU(),
-            # torch.nn.Dropout(p=0.3),
             torch.nn.Linear(512, n_components),
             torch.nn.Identity())
 

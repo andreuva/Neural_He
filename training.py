@@ -14,7 +14,7 @@ try:
 except:
     NVIDIA_SMI = False
 
-coefficient = 'eta_I'
+coefficient = 'eta_Q'
 readir = '../DATA/neural_he/spectra/'   # sorted(glob.glob('../DATA/neural_he/spectra/*'))[-1]
 readfile = f'model_ready_1M_{coefficient}_normaliced.pkl'
 print('Reading data from: ', readir + readfile)
@@ -25,10 +25,10 @@ layers = 5
 
 batch_size = 512
 epochs = 250
-learning_rate = 1e-1/3
-step_size_scheduler = 20
-gamma_scheduler = 1/3
-smooth = 0.8
+learning_rate = 1e-3
+step_size_scheduler = 50
+gamma_scheduler = 1/2
+smooth = 0.75
 
 # construct the base name to save the model
 basename = f'trained_model'
