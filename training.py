@@ -25,8 +25,8 @@ layers = 5
 
 batch_size = 512
 epochs = 250
-learning_rate = 1e-3
-step_size_scheduler = 50
+learning_rate = 5e-4
+step_size_scheduler = 40
 gamma_scheduler = 1/2
 smooth = 0.75
 

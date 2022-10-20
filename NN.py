@@ -1,3 +1,4 @@
+from distutils.command.sdist import sdist
 import torch
 from torch import nn
 import math
@@ -10,40 +11,74 @@ class MLP(torch.nn.Module):
         self.n_components = n_components
         self.n_features = n_features
 
-        # Building an linear decoder with Linear
-        # layer with Relu activation function and dropout
-        self.decoder = torch.nn.Sequential(
+        # Building an linear NN
+        # with Relu activation function
+        self.Linear = torch.nn.Sequential(
             torch.nn.Linear(n_features, 36),
             torch.nn.LeakyReLU(),
-            # torch.nn.Dropout(p=0.05),
             torch.nn.Linear(36, 64),
             torch.nn.LeakyReLU(),
-            # torch.nn.Dropout(p=0.1),
             torch.nn.Linear(64, 128),
             torch.nn.LeakyReLU(),
-            # torch.nn.Dropout(p=0.15),
             torch.nn.Linear(128, 256),
             torch.nn.LeakyReLU(),
-            # torch.nn.Dropout(p=0.2),
             torch.nn.Linear(256, 512),
             torch.nn.LeakyReLU(),
-            # torch.nn.Dropout(p=0.25),
             torch.nn.Linear(512, 512),
             torch.nn.LeakyReLU(),
-            # torch.nn.Dropout(p=0.3),
             torch.nn.Linear(512, 1024),
             torch.nn.LeakyReLU(),
-            # torch.nn.Dropout(p=0.3),
             torch.nn.Linear(1024, 512),
             torch.nn.LeakyReLU(),
-            # torch.nn.Dropout(p=0.3),
             torch.nn.Linear(512, 512),
             torch.nn.LeakyReLU(),
             torch.nn.Linear(512, n_components),
-            torch.nn.Identity())
+            torch.nn.Identity()
+            )
+
+        # Output dimension for the convolution (Input=64, 3 Maxpooling layers (in/2), 32 output channels)
+        self.in_conv = 256
+        self.out_chanels = 16
+        self.num_conv = 4
+        self.out_conv = int(self.out_chanels*(self.in_conv/(2**self.num_conv)))
+
+        self.l1 = torch.nn.Linear(n_features, 64)
+        self.l2 = torch.nn.Linear(64, 128)
+        self.l3 = torch.nn.Linear(128, self.in_conv)
+        self.conv_layer1 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=1, out_channels=32, kernel_size=5, stride=1, padding=2),
+                                              torch.nn.LeakyReLU(),
+                                              torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
+        self.conv_layer2 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=32, out_channels=64, kernel_size=5, stride=1, padding=2),
+                                              torch.nn.LeakyReLU(),
+                                              torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
+        self.conv_layer3 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=64, out_channels=32, kernel_size=5, stride=1, padding=2),
+                                              torch.nn.LeakyReLU(),
+                                              torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
+        self.conv_layer4 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=32, out_channels=self.out_chanels, kernel_size=5, stride=1, padding=2),
+                                              torch.nn.LeakyReLU(),
+                                              torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
+        self.l4 = torch.nn.Linear(self.out_conv, 256)
+        self.l5 = torch.nn.Linear(256, n_components)
+        self.LeakyReLU = torch.nn.LeakyReLU()
 
     def forward(self, x):
-        return  self.decoder(x)    # decoded
+        x = self.l1(x)
+        x = self.LeakyReLU(x)
+        x = self.l2(x)
+        x = self.LeakyReLU(x)
+        x = self.l3(x)
+        x = self.LeakyReLU(x)
+        x = x.view(-1, 1, self.in_conv)
+        x = self.conv_layer1(x)
+        x = self.conv_layer2(x)
+        x = self.conv_layer3(x)
+        x = self.conv_layer4(x)
+        x = x.view(-1, self.out_conv)
+        x = self.l4(x)
+        x = self.LeakyReLU(x)
+        x = self.l5(x)
+        return  x
+        # return  self.Linear(x)
 
 ###############################################################################
 #                        SIREN IMPLEMENTATION                                 #
