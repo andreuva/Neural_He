@@ -37,28 +37,32 @@ class MLP(torch.nn.Module):
             )
 
         # Output dimension for the convolution (Input=64, 3 Maxpooling layers (in/2), 32 output channels)
-        self.in_conv = 256
-        self.out_chanels = 16
-        self.num_conv = 4
+        self.in_conv = 512
+        self.out_chanels = 32
+        self.num_conv = 5
         self.out_conv = int(self.out_chanels*(self.in_conv/(2**self.num_conv)))
 
         self.l1 = torch.nn.Linear(n_features, 64)
         self.l2 = torch.nn.Linear(64, 128)
-        self.l3 = torch.nn.Linear(128, self.in_conv)
+        self.l3 = torch.nn.Linear(128, 256)
+        self.l4 = torch.nn.Linear(256, self.in_conv)
         self.conv_layer1 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=1, out_channels=32, kernel_size=5, stride=1, padding=2),
                                               torch.nn.LeakyReLU(),
                                               torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
         self.conv_layer2 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=32, out_channels=64, kernel_size=5, stride=1, padding=2),
                                               torch.nn.LeakyReLU(),
                                               torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
-        self.conv_layer3 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=64, out_channels=32, kernel_size=5, stride=1, padding=2),
+        self.conv_layer3 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=64, out_channels=128, kernel_size=5, stride=1, padding=2),
                                               torch.nn.LeakyReLU(),
                                               torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
-        self.conv_layer4 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=32, out_channels=self.out_chanels, kernel_size=5, stride=1, padding=2),
+        self.conv_layer4 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=128, out_channels=64, kernel_size=5, stride=1, padding=2),
                                               torch.nn.LeakyReLU(),
                                               torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
-        self.l4 = torch.nn.Linear(self.out_conv, 256)
-        self.l5 = torch.nn.Linear(256, n_components)
+        self.conv_layer5 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=64, out_channels=self.out_chanels, kernel_size=5, stride=1, padding=2),
+                                              torch.nn.LeakyReLU(),
+                                              torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
+        self.l5 = torch.nn.Linear(self.out_conv, 256)
+        self.l6 = torch.nn.Linear(256, n_components)
         self.LeakyReLU = torch.nn.LeakyReLU()
 
     def forward(self, x):
@@ -68,15 +72,18 @@ class MLP(torch.nn.Module):
         x = self.LeakyReLU(x)
         x = self.l3(x)
         x = self.LeakyReLU(x)
+        x = self.l4(x)
+        x = self.LeakyReLU(x)
         x = x.view(-1, 1, self.in_conv)
         x = self.conv_layer1(x)
         x = self.conv_layer2(x)
         x = self.conv_layer3(x)
         x = self.conv_layer4(x)
+        x = self.conv_layer5(x)
         x = x.view(-1, self.out_conv)
-        x = self.l4(x)
-        x = self.LeakyReLU(x)
         x = self.l5(x)
+        x = self.LeakyReLU(x)
+        x = self.l6(x)
         return  x
         # return  self.Linear(x)
 

@@ -23,7 +23,7 @@ print('Reading data from: ', readir + readfile)
 dim_hidden = 128
 layers = 5
 
-batch_size = 512
+batch_size = 256
 epochs = 250
 learning_rate = 5e-4
 step_size_scheduler = 40
@@ -31,7 +31,7 @@ gamma_scheduler = 1/2
 smooth = 0.75
 
 # construct the base name to save the model
-basename = f'trained_model'
+basename = f'trained_model_cnn'
 savedir = f'./{basename}s_{coefficient}_bs_{batch_size}_lr_{learning_rate}_gs_{gamma_scheduler}_time_{time.strftime("%Y%m%d-%H%M%S")}/'
 # check if there is a folder for the checkpoints and create it if not
 if not os.path.exists(savedir):
@@ -229,6 +229,7 @@ for i, indx in tqdm(enumerate(np.random.randint(0,test_dataset.n_samples,25))):
 
     reconstructed = model.forward(torch.tensor(params).to(device))
     reconstructed = reconstructed.detach().cpu().numpy()
+    reconstructed = reconstructed.reshape(profiles.shape)
 
     ax2.flat[i].plot(test_dataset.nus, profiles, color='C0')
     ax2.flat[i].plot(test_dataset.nus, reconstructed, color='C1')
