@@ -7,6 +7,8 @@ from dataset import profiles_dataset
 from NN import MLP, SirenNet
 import time, os, glob
 from torchsummary import summary
+import wandb
+wandb.init(project="neural-He")
 
 try:
     import nvidia_smi
@@ -28,7 +30,16 @@ epochs = 250
 learning_rate = 5e-4
 step_size_scheduler = 40
 gamma_scheduler = 1/2
-smooth = 0.75
+smooth = 0.6
+
+wandb.config = {
+                "learning_rate": learning_rate,
+                "epochs": epochs,
+                "batch_size": batch_size,
+                "step_size_scheduler": step_size_scheduler,
+                "gamma_scheduler": gamma_scheduler,
+                "smooth": smooth,
+                }
 
 # construct the base name to save the model
 basename = f'trained_model_cnn'
@@ -192,6 +203,13 @@ for epoch in range(epochs):
         torch.save(checkpoint, f'{savedir}' + filename + '.pth')
 
     scheduler.step()
+    wandb.log({
+                'train_loss': train_loss_avg,
+                'valid_loss': test_loss_avg,
+                'learning_rate': scheduler.get_last_lr()[0]
+              })
+    # Optional
+    wandb.watch(model)
 
 # finished training
 end_time = time.time()

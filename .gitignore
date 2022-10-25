@@ -3,4 +3,5 @@ __pycache__/
 checkpoints*/
 trained_model*/
 data*/
+wandb*/
 test*/
