@@ -66,6 +66,7 @@ class MLP(torch.nn.Module):
         self.LeakyReLU = torch.nn.LeakyReLU()
 
     def forward(self, x):
+        # return  self.Linear(x)
         x = self.l1(x)
         x = self.LeakyReLU(x)
         x = self.l2(x)
@@ -85,7 +86,6 @@ class MLP(torch.nn.Module):
         x = self.LeakyReLU(x)
         x = self.l6(x)
         return  x
-        # return  self.Linear(x)
 
 ###############################################################################
 #                        SIREN IMPLEMENTATION                                 #

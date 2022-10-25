@@ -8,7 +8,6 @@ from NN import MLP, SirenNet
 import time, os, glob
 from torchsummary import summary
 import wandb
-wandb.init(project="neural-He")
 
 try:
     import nvidia_smi
@@ -22,17 +21,21 @@ readfile = f'model_ready_1M_{coefficient}_normaliced.pkl'
 print('Reading data from: ', readir + readfile)
 
 # Network params
-dim_hidden = 128
-layers = 5
-
 batch_size = 256
-epochs = 250
+epochs = 300
 learning_rate = 5e-4
 step_size_scheduler = 40
-gamma_scheduler = 1/2
-smooth = 0.6
+gamma_scheduler = 1.1/2
+smooth = 1.0
+timestr = time.strftime("%Y%m%d-%H%M%S")
 
+# construct the base name to save the model
+basename = f'trained_model_cnn'
+savedir = f'./{basename}s_{coefficient}_bs_{batch_size}_lr_{learning_rate}_gs_{gamma_scheduler}_time_{timestr}/'
+
+wandb.init(project="neural-He", name=f"MLP-{coefficient}-{timestr}")
 wandb.config = {
+                'coefficient': coefficient,
                 "learning_rate": learning_rate,
                 "epochs": epochs,
                 "batch_size": batch_size,
@@ -41,9 +44,6 @@ wandb.config = {
                 "smooth": smooth,
                 }
 
-# construct the base name to save the model
-basename = f'trained_model_cnn'
-savedir = f'./{basename}s_{coefficient}_bs_{batch_size}_lr_{learning_rate}_gs_{gamma_scheduler}_time_{time.strftime("%Y%m%d-%H%M%S")}/'
 # check if there is a folder for the checkpoints and create it if not
 if not os.path.exists(savedir):
     os.makedirs(savedir)
@@ -101,9 +101,6 @@ print('-'*50)
 print('Initializing the model ...\n')
 
 model = MLP(dataset.n_components,  dataset.n_features).to(device)
-# model = mlp.MLPMultiFourier(n_input=dataset.n_features, n_output=dataset.n_components, n_hidden=dim_hidden, n_hidden_layers=layers,
-#                             sigma=[5], activation=torch.nn.Tanh(), final_activation=torch.nn.Sigmoid()).to(device)
-# model = SirenNet(dim_in=dataset.n_features, dim_hidden=dim_hidden, dim_out=375, num_layers=layers, final_activation=torch.nn.Sigmoid()).to(device)
 summary(model, (1, dataset.n_features), batch_size=batch_size)
 
 # Validation using MSE Loss function
