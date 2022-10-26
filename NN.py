@@ -27,7 +27,8 @@ class MLP(torch.nn.Module):
 
 class CNN(torch.nn.Module):
     def __init__(self, n_components, n_features,
-                       mlp_hiden_in=[64, 128, 256], mlp_hiden_out=[512], conv_hiden=[64], conv_kernel_size=5):
+                       mlp_hiden_in=[64, 128, 256], mlp_hiden_out=[512], 
+                       conv_hiden=[64], conv_kernel_size=5):
         super().__init__()
         self.n_components = n_components
         self.n_features = n_features

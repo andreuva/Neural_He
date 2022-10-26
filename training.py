@@ -26,8 +26,10 @@ hyperparameters['timestr'] = timestr
 # Definition parameters of the network
 coefficient = hyperparameters['coefficient']
 archiquecture = hyperparameters['archiquecture']
-mlp_hidden_size = hyperparameters['mlp_hidden_size']
-cnn_hidden_size = hyperparameters['cnn_hidden_size']
+if archiquecture == 'cnn':
+    cnn_hidden_size = hyperparameters['cnn_hidden_size']
+elif archiquecture == 'mlp':
+    mlp_hidden_size = hyperparameters['mlp_hidden_size']
 readir = hyperparameters['readir']      # sorted(glob.glob('../DATA/neural_he/spectra/*'))[-1]
 
 # Training network parameters
@@ -107,7 +109,7 @@ print('Initializing the model ...\n')
 if archiquecture == 'mlp':
     model = MLP(dataset.n_components,  dataset.n_features, mlp_hidden_size).to(device)
 elif archiquecture == 'cnn':
-    model = CNN(dataset.n_components,  dataset.n_features).to(device)
+    model = CNN(dataset.n_components,  dataset.n_features, conv_hiden=cnn_hidden_size).to(device)
 elif archiquecture == 'siren':
     model = SirenNet(dataset.n_components,  dataset.n_features).to(device)
 else:
