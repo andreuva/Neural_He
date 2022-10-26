@@ -6,85 +6,59 @@ import torch.nn.functional as funct
 
 
 class MLP(torch.nn.Module):
-    def __init__(self, n_components, n_features):
+    def __init__(self, n_components, n_features, hidden_size=[128]):
         super().__init__()
         self.n_components = n_components
         self.n_features = n_features
 
-        # Building an linear NN
-        # with Relu activation function
-        self.Linear = torch.nn.Sequential(
-            torch.nn.Linear(n_features, 36),
-            torch.nn.LeakyReLU(),
-            torch.nn.Linear(36, 64),
-            torch.nn.LeakyReLU(),
-            torch.nn.Linear(64, 128),
-            torch.nn.LeakyReLU(),
-            torch.nn.Linear(128, 256),
-            torch.nn.LeakyReLU(),
-            torch.nn.Linear(256, 512),
-            torch.nn.LeakyReLU(),
-            torch.nn.Linear(512, 512),
-            torch.nn.LeakyReLU(),
-            torch.nn.Linear(512, 1024),
-            torch.nn.LeakyReLU(),
-            torch.nn.Linear(1024, 512),
-            torch.nn.LeakyReLU(),
-            torch.nn.Linear(512, 512),
-            torch.nn.LeakyReLU(),
-            torch.nn.Linear(512, n_components),
-            torch.nn.Identity()
-            )
+        modules = []
+        modules.append(nn.Linear(n_features, hidden_size[0]))
+        modules.append(nn.ReLU())
+        for i in range(len(hidden_size) - 1):
+            modules.append(nn.Linear(hidden_size[i], hidden_size[i + 1]))
+            modules.append(nn.ReLU())
+        modules.append(nn.Linear(hidden_size[-1], n_components))
 
-        # Output dimension for the convolution (Input=64, 3 Maxpooling layers (in/2), 32 output channels)
-        self.in_conv = 512
-        self.out_chanels = 32
-        self.num_conv = 5
-        self.out_conv = int(self.out_chanels*(self.in_conv/(2**self.num_conv)))
-
-        self.l1 = torch.nn.Linear(n_features, 64)
-        self.l2 = torch.nn.Linear(64, 128)
-        self.l3 = torch.nn.Linear(128, 256)
-        self.l4 = torch.nn.Linear(256, self.in_conv)
-        self.conv_layer1 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=1, out_channels=32, kernel_size=5, stride=1, padding=2),
-                                              torch.nn.LeakyReLU(),
-                                              torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
-        self.conv_layer2 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=32, out_channels=64, kernel_size=5, stride=1, padding=2),
-                                              torch.nn.LeakyReLU(),
-                                              torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
-        self.conv_layer3 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=64, out_channels=128, kernel_size=5, stride=1, padding=2),
-                                              torch.nn.LeakyReLU(),
-                                              torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
-        self.conv_layer4 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=128, out_channels=64, kernel_size=5, stride=1, padding=2),
-                                              torch.nn.LeakyReLU(),
-                                              torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
-        self.conv_layer5 = torch.nn.Sequential(torch.nn.Conv1d(in_channels=64, out_channels=self.out_chanels, kernel_size=5, stride=1, padding=2),
-                                              torch.nn.LeakyReLU(),
-                                              torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
-        self.l5 = torch.nn.Linear(self.out_conv, 256)
-        self.l6 = torch.nn.Linear(256, n_components)
-        self.LeakyReLU = torch.nn.LeakyReLU()
+        self.Linear = nn.Sequential(*modules)
 
     def forward(self, x):
-        # return  self.Linear(x)
-        x = self.l1(x)
-        x = self.LeakyReLU(x)
-        x = self.l2(x)
-        x = self.LeakyReLU(x)
-        x = self.l3(x)
-        x = self.LeakyReLU(x)
-        x = self.l4(x)
-        x = self.LeakyReLU(x)
+        return  self.Linear(x)
+
+
+class CNN(torch.nn.Module):
+    def __init__(self, n_components, n_features,
+                       mlp_hiden_in=[64, 128, 256], mlp_hiden_out=[512], conv_hiden=[64], conv_kernel_size=5):
+        super().__init__()
+        self.n_components = n_components
+        self.n_features = n_features
+
+        # Output dimension for the convolution (Input=64, 3 Maxpooling layers (in/2), 32 output channels)
+        self.in_conv = mlp_hiden_in[-1]
+        self.out_chanels = conv_hiden[-1]
+        self.num_conv = len(conv_hiden)
+        self.out_conv = int(self.out_chanels*(self.in_conv/(2**self.num_conv)))
+
+        self.MLP_input = MLP(self.in_conv, n_features, mlp_hiden_in)
+
+        ccn_modules = []
+        ccn_modules.append(nn.Conv1d(in_channels=1, out_channels=conv_hiden[0], kernel_size=conv_kernel_size, stride=1, padding=2))
+        ccn_modules.append(nn.ReLU())
+        ccn_modules.append(nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
+        for i in range(len(conv_hiden) - 1):
+            ccn_modules.append(nn.Conv1d(conv_hiden[i], conv_hiden[i + 1], kernel_size=conv_kernel_size, stride=1, padding=2))
+            ccn_modules.append(nn.ReLU())
+            ccn_modules.append(torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
+
+        self.CNN = torch.nn.Sequential(*ccn_modules)
+        self.MLP_output = MLP(n_components, self.out_conv, mlp_hiden_out)
+    
+
+    def forward(self, x):
+        x = self.MLP_input.forward(x)
         x = x.view(-1, 1, self.in_conv)
-        x = self.conv_layer1(x)
-        x = self.conv_layer2(x)
-        x = self.conv_layer3(x)
-        x = self.conv_layer4(x)
-        x = self.conv_layer5(x)
+        x = self.CNN(x)
         x = x.view(-1, self.out_conv)
-        x = self.l5(x)
-        x = self.LeakyReLU(x)
-        x = self.l6(x)
+        x = self.MLP_output.forward(x)
         return  x
 
 ###############################################################################

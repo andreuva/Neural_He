@@ -1,4 +1,3 @@
-from cProfile import run
 import numpy as np
 import torch
 from dataset import profiles_dataset
@@ -19,64 +18,40 @@ else:
     print('Using CPU')
     print(device)
 
+coefficient = 'eta_Q'
+archiquecture = 'cnn'
+readir = '../DATA/neural_he/spectra/' # sorted(glob('../DATA/neural_he/spectra/*'))[-2] + '/'
+readfile = f'model_ready_1M_{coefficient}_normaliced.pkl'
+run_loaded = f'trained_model_cnns_eta_Q_bs_256_lr_0.0005_gs_0.55_time_20221025-164830'
+checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
+savedir = run_loaded + '/'
 
-readir = sorted(glob('../DATA/neural_he/spectra/*'))[-2] + '/'
-readfile = 'model_ready.pkl'
+print('Reading data from: ', readir + readfile)
 # create the dataset to test
-dataset = profiles_dataset(f'{readir}{readfile}', train=False)
-# dataset = profiles_dataset('../DATA/neural_he/spectra/model_ready_flat_spectrum_100k.pkl', train=False)
-
-# DataLoader is used to load the dataset
-test_loader = torch.utils.data.DataLoader(dataset = dataset,
-                                          batch_size = 1,
-                                          shuffle = True,
-                                          pin_memory = True)
+test_dataset = profiles_dataset(f'{readir}{readfile}', train=False)
 
 # Load the checkpoint and initialize the model
-run_loaded = sorted(glob('trained_*/'))[1]
 print(f'Loading the model from {run_loaded}')
-checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-1]
 print(f'Loading the checkpoint {checkpoint}')
 checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
-model = MLP(dataset.n_components, dataset.n_features).to(device)
+model = MLP(test_dataset.n_components, test_dataset.n_features).to(device)
 model.load_state_dict(checkpoint['state_dict'])
 
-reconstructed_profiles = []
+# select a random sample from the test dataset and test the network
+# then plot the predicted output and the ground truth
+print('Ploting and saving Intiensities from the sampled populations from the test data ...\n')
+fig2, ax2 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
+for i, indx in tqdm(enumerate(np.random.randint(0,test_dataset.n_samples,25))):
+    params, profiles = test_dataset[indx]
 
-# predict the test data with the loaded model
-model.eval()
-with torch.no_grad():
-    for (params, profile) in tqdm(test_loader):
-        params = params.to(device)
+    reconstructed = model.forward(torch.tensor(params).to(device))
+    reconstructed = reconstructed.detach().cpu().numpy()
+    reconstructed = reconstructed.reshape(profiles.shape)
 
-        prediction = model(params)
-        prediction = prediction.detach().cpu().numpy()
-        params = params.detach().cpu().numpy()
-        profile = profile.detach().cpu().numpy()
+    ax2.flat[i].plot(test_dataset.nus, profiles, color='C0')
+    ax2.flat[i].plot(test_dataset.nus, reconstructed, color='C1')
 
-        prediction = np.squeeze(prediction)
-        params = np.squeeze(params)
-        profile = np.squeeze(profile)
-
-        # save the reconstructed profile to a variable
-        reconstructed_profiles.append([params, profile, prediction])
-
-profiles = np.array([iterat[-2] for iterat in reconstructed_profiles])
-profiles = np.squeeze(profiles)
-reconstructions = np.array([iterat[-1] for iterat in reconstructed_profiles])
-reconstructions = np.squeeze(reconstructions)
-
-for i in range(10):
-    plt.plot(profiles[i],'.', label='original')
-    plt.plot(reconstructions[i], label='reconstructed')
-
-    plt.legend()
-    plt.show()
-
-for i in range(len(profiles)):
-    plt.plot(profiles[i], reconstructions[i], ',r')
-
-plt.xscale('log')
-plt.yscale('log')
-plt.savefig('reconstruction_comparison.png')
-plt.close()
+# saving the plots
+print('Saving the plots ...\n')
+fig2.savefig(f'{savedir}test_profile_{run_loaded}_2.png', bbox_inches='tight')
+plt.close(fig2)
