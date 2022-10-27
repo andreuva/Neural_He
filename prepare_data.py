@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
         parameters, profiles = load_data(folder)
         # transform the parameters to save it into the dataset
-        params = [[param['B'], param['B_inc'], param['B_inc'],
+        params = [[param['B'], param['B_inc'], param['B_az'],
                 param['mu'], param['chi'],
                 param['a_voigt'], param['temp'],                                  # Thermal parameters
                 param['JKQr'][0][0], param['JKQr'][1][0], param['JKQr'][2][0],

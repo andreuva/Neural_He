@@ -2,6 +2,7 @@ import pickle as pkl
 import glob
 import numpy as np
 
+print('Loading data...')
 for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']:
 
     folder = sorted(glob.glob('../DATA/neural_he/spectra/data*'))[-1] + '/'
@@ -32,12 +33,24 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
     #          l4={data_4[key][0].shape}, join={data_join[key][0].shape}') for key in data_1.keys()]
 
     params = data_join['params']
-    params_normmax = (params/np.abs(params).max(axis=0))
-    params_logmax_sign = np.where(params_normmax <=0, -np.log10(-params_normmax)+np.log10(np.abs(params_normmax).mean(axis=0)),
-                                                    +np.log10(+params_normmax)-np.log10(np.abs(params_normmax).mean(axis=0)))
+    # params_normmax = (params/np.abs(params).max(axis=0))
+    # params_logmax_sign = np.where(params_normmax <=0, -np.log10(-params_normmax)+np.log10(np.abs(params_normmax).mean(axis=0)),
+    #                                                 +np.log10(+params_normmax)-np.log10(np.abs(params_normmax).mean(axis=0)))
     params_minmax = (params - params.min(axis=0))/(params.max(axis=0) - params.min(axis=0))
-    params_normaliced = params_logmax_sign
-    params_normaliced[:,0:7] = params_minmax[:,0:7]
+    # params_normaliced = params_logmax_sign
+    # params_normaliced[:,0:7] = params_minmax[:,0:7]
+    Jr = params[:,7:16]
+    Jb = params[:,16:]
+    for i in range(1,9):
+        Jr[:,i] = Jr[:,i]/Jr[:,0]
+        Jb[:,i] = Jb[:,i]/Jb[:,0]
+    Jr[:,0] = np.log10(Jr[:,0])
+    Jb[:,0] = np.log10(Jb[:,0])
+
+    params_normaliced = np.zeros_like(params_minmax)
+    params_normaliced[:,0:7] = params_minmax[:,0:7].copy()
+    params_normaliced[:,7:16] = Jr.copy()
+    params_normaliced[:,16:] = Jb.copy()
     data_join['params'] = params_normaliced
 
     if coefficient == 'eta_I':
@@ -45,8 +58,8 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
     else:
         data_join['profiles'] = data_join['profiles']/1e-10
 
-    with open(f'../DATA/neural_he/spectra/model_ready_1M_{coefficient}_normaliced.pkl', 'wb') as f:
+    with open(f'../DATA/neural_he/spectra/model_ready_1M_{coefficient}_normaliced_JKQ.pkl', 'wb') as f:
         pkl.dump(data_join, f)
     
     del data_1, data_2, data_3, data_4, data_join
-    del params, params_normmax, params_logmax_sign, params_minmax, params_normaliced
+    del params, params_minmax, params_normaliced, Jr, Jb

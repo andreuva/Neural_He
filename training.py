@@ -49,7 +49,7 @@ savedir = f'./checkpoints/{basename}_{coefficient}_time_{timestr}/'
 if not os.path.exists(savedir):
     os.makedirs(savedir)
 # file to load the data from
-readfile = f'model_ready_1M_{coefficient}_normaliced.pkl'
+readfile = f'model_ready_1M_{coefficient}_normaliced_JKQ.pkl'
 print('Reading data from: ', readir + readfile)
 
 wandb.init(project="neural-He", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
@@ -96,12 +96,15 @@ print('Creating the training DataLoader ...')
 train_loader = torch.utils.data.DataLoader(dataset = dataset,
                                            batch_size = batch_size,
                                            shuffle = True,
-                                           pin_memory = True)
+                                           pin_memory = True,
+                                           num_workers = 4)
 print('Creating the test DataLoader ...')
+# use only 4 cpus for loading
 test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
                                           batch_size = batch_size,
                                           shuffle = True,
-                                          pin_memory = True)
+                                          pin_memory = True,
+                                          num_workers = 4)
 
 # Model Initialization
 print('-'*50)
