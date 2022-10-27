@@ -26,6 +26,7 @@ hyperparameters['timestr'] = timestr
 # Definition parameters of the network
 coefficient = hyperparameters['coefficient']
 archiquecture = hyperparameters['archiquecture']
+gpu = hyperparameters['gpu']
 if archiquecture == 'cnn':
     cnn_hidden_size = hyperparameters['cnn_hidden_size']
 elif archiquecture == 'mlp':
@@ -57,7 +58,6 @@ wandb.init(project="neural-He", name=f"{archiquecture}-{coefficient}-{timestr}",
 
 # check if the GPU is available
 cuda = torch.cuda.is_available()
-gpu = 0
 device = torch.device(f"cuda:{gpu}" if cuda else "cpu")
 print('Checking the GPU availability...')
 if cuda:
