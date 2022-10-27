@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from dataset import profiles_dataset
-from NN import MLP
+from NN import MLP, CNN, SirenNet
 from tqdm import tqdm
 from glob import glob
 import matplotlib.pyplot as plt
@@ -18,23 +18,34 @@ else:
     print('Using CPU')
     print(device)
 
-coefficient = 'eta_Q'
-archiquecture = 'cnn'
+run_loaded = f'checkpoints/trained_model_mlp_eta_Q_time_20221026-211555'
+checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
+# Load the checkpoint and initialize the model
+print(f'Loading the model from {run_loaded}')
+print(f'Loading the checkpoint {checkpoint}')
+checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
+
+coefficient = checkpoint['hyperparameters']['coefficient']
+archiquecture = checkpoint['hyperparameters']['archiquecture']
 readir = '../DATA/neural_he/spectra/' # sorted(glob('../DATA/neural_he/spectra/*'))[-2] + '/'
 readfile = f'model_ready_1M_{coefficient}_normaliced.pkl'
-run_loaded = f'trained_model_cnns_eta_Q_bs_256_lr_0.0005_gs_0.55_time_20221025-164830'
-checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 savedir = run_loaded + '/'
 
 print('Reading data from: ', readir + readfile)
 # create the dataset to test
 test_dataset = profiles_dataset(f'{readir}{readfile}', train=False)
 
-# Load the checkpoint and initialize the model
-print(f'Loading the model from {run_loaded}')
-print(f'Loading the checkpoint {checkpoint}')
-checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
-model = MLP(test_dataset.n_components, test_dataset.n_features).to(device)
+if archiquecture == 'cnn':
+    model = CNN(test_dataset.n_components,  test_dataset.n_features,
+                conv_hiden=checkpoint['hyperparameters']['cnn_hidden_size']).to(device)
+elif archiquecture == 'mlp':
+    model = MLP(test_dataset.n_components,  test_dataset.n_features,
+                checkpoint['hyperparameters']['mlp_hidden_size']).to(device)
+elif archiquecture == 'siren':
+    model = SirenNet(test_dataset.n_components,  test_dataset.n_features,
+                     checkpoint['hyperparameters']['siren_hidden_size']).to(device)
+else:
+    raise ValueError('Architecture not recognized')
 model.load_state_dict(checkpoint['state_dict'])
 
 # select a random sample from the test dataset and test the network
@@ -53,5 +64,5 @@ for i, indx in tqdm(enumerate(np.random.randint(0,test_dataset.n_samples,25))):
 
 # saving the plots
 print('Saving the plots ...\n')
-fig2.savefig(f'{savedir}test_profile_{run_loaded}_2.png', bbox_inches='tight')
+fig2.savefig(f'{savedir}test_profiles.png', bbox_inches='tight')
 plt.close(fig2)

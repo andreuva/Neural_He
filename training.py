@@ -39,9 +39,14 @@ learning_rate = hyperparameters['learning_rate']
 step_size_scheduler = hyperparameters['step_size_scheduler']
 gamma_scheduler = hyperparameters['gamma_scheduler']
 
+if not os.path.exists('./checkpoints'):
+    os.makedirs('./checkpoints')
 # construct the base name to save the model
 basename = f'trained_model_{archiquecture}'
-savedir = f'./{basename}_{coefficient}_time_{timestr}/'
+savedir = f'./checkpoints/{basename}_{coefficient}_time_{timestr}/'
+# check if there is a folder for the checkpoints and create it if not
+if not os.path.exists(savedir):
+    os.makedirs(savedir)
 # file to load the data from
 readfile = f'model_ready_1M_{coefficient}_normaliced.pkl'
 print('Reading data from: ', readir + readfile)
@@ -49,10 +54,6 @@ print('Reading data from: ', readir + readfile)
 wandb.init(project="neural-He", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
            group = f"{archiquecture}-inital", job_type = f"{coefficient}",
            config=hyperparameters, save_code=True, magic=True)
-
-# check if there is a folder for the checkpoints and create it if not
-if not os.path.exists(savedir):
-    os.makedirs(savedir)
 
 # check if the GPU is available
 cuda = torch.cuda.is_available()
