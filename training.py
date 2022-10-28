@@ -53,7 +53,7 @@ readfile = f'model_ready_1M_{coefficient}_normaliced_JKQ.pkl'
 print('Reading data from: ', readir + readfile)
 
 wandb.init(project="neural-He", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
-           group = f"{archiquecture}-inital", job_type = f"{coefficient}",
+           group = f"{archiquecture}-{hyperparameters['group_suffix']}", job_type = f"{coefficient}",
            config=hyperparameters, save_code=True, magic=True)
 
 # check if the GPU is available
