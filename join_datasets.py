@@ -63,3 +63,5 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
     
     del data_1, data_2, data_3, data_4, data_join
     del params, params_minmax, params_normaliced, Jr, Jb
+
+print('Done!')
