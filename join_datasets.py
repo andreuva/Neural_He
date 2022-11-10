@@ -27,23 +27,20 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
     data_join['profiles'] = np.concatenate((data_4['profiles'], data_3['profiles'], data_2['profiles'], data_1['profiles']))
     data_join['nus'] = data_1['nus']
 
-    # [print(f'Length of datasets for key "{key}": l1={len(data_1[key])}, l2={len(data_2[key])}, l3={len(data_3[key])}, l4={len(data_4[key])},\
-    #          join={len(data_join[key])}') for key in data_1.keys()]
-    # [print(f'Shape of each sample for key "{key}": l1={data_1[key][0].shape}, l2={data_2[key][0].shape}, l3={data_3[key][0].shape},\
-    #          l4={data_4[key][0].shape}, join={data_join[key][0].shape}') for key in data_1.keys()]
+    [print(f'Length of datasets for key "{key}": l1={len(data_1[key])}, l2={len(data_2[key])}, l3={len(data_3[key])}, l4={len(data_4[key])},\
+             join={len(data_join[key])}') for key in data_1.keys()]
+    [print(f'Shape of each sample for key "{key}": l1={data_1[key][0].shape}, l2={data_2[key][0].shape}, l3={data_3[key][0].shape},\
+             l4={data_4[key][0].shape}, join={data_join[key][0].shape}') for key in data_1.keys()]
 
     params = data_join['params']
-    # params_normmax = (params/np.abs(params).max(axis=0))
-    # params_logmax_sign = np.where(params_normmax <=0, -np.log10(-params_normmax)+np.log10(np.abs(params_normmax).mean(axis=0)),
-    #                                                 +np.log10(+params_normmax)-np.log10(np.abs(params_normmax).mean(axis=0)))
     params_minmax = (params - params.min(axis=0))/(params.max(axis=0) - params.min(axis=0))
-    # params_normaliced = params_logmax_sign
-    # params_normaliced[:,0:7] = params_minmax[:,0:7]
-    Jr = params[:,7:16]
-    Jb = params[:,16:]
+    Jr, Jb = params[:,7:16], params[:,16:]
+
+    # Normalize by J00 (JKQ/J00 is from -1 to 1)
     for i in range(1,9):
         Jr[:,i] = Jr[:,i]/Jr[:,0]
         Jb[:,i] = Jb[:,i]/Jb[:,0]
+    # Normalize J00 by doing the log
     Jr[:,0] = np.log10(Jr[:,0])
     Jb[:,0] = np.log10(Jb[:,0])
 
@@ -56,9 +53,9 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
     if coefficient == 'eta_I':
         data_join['profiles'] = data_join['profiles']/1e-9
     else:
-        data_join['profiles'] = data_join['profiles']/1e-10
+        data_join['profiles'] = data_join['profiles']/1e-12
 
-    with open(f'../DATA/neural_he/spectra/model_ready_1M_{coefficient}_normaliced_JKQ.pkl', 'wb') as f:
+    with open(f'../DATA/neural_he/spectra/model_ready_1M_{coefficient}_normaliced_QUVe-13.pkl', 'wb') as f:
         pkl.dump(data_join, f)
     
     del data_1, data_2, data_3, data_4, data_join
