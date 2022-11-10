@@ -55,7 +55,7 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
     else:
         data_join['profiles'] = data_join['profiles']/1e-12
 
-    with open(f'../DATA/neural_he/spectra/model_ready_1M_{coefficient}_normaliced_QUVe-13.pkl', 'wb') as f:
+    with open(f'../DATA/neural_he/spectra/model_ready_1M_{coefficient}_normaliced_QUVe-12.pkl', 'wb') as f:
         pkl.dump(data_join, f)
     
     del data_1, data_2, data_3, data_4, data_join

@@ -49,7 +49,7 @@ savedir = f'./checkpoints/{basename}_{coefficient}_time_{timestr}/'
 if not os.path.exists(savedir):
     os.makedirs(savedir)
 # file to load the data from
-readfile = f'model_ready_1M_{coefficient}_normaliced_JKQ.pkl'
+readfile = f'model_ready_1M_{coefficient}_normaliced_{hyperparameters["group_suffix"]}.pkl'
 print('Reading data from: ', readir + readfile)
 
 wandb.init(project="neural-He", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
