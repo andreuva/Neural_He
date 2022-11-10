@@ -42,39 +42,20 @@ if __name__ == "__main__":
         print(f'Loading data from {folder}')
 
         parameters, profiles = load_data(folder)
-        # transform the parameters to save it into the dataset
         params = [[param['B'], param['B_inc'], param['B_az'],
-                param['mu'], param['chi'],
-                param['a_voigt'], param['temp'],                                  # Thermal parameters
-                param['JKQr'][0][0], param['JKQr'][1][0], param['JKQr'][2][0],
-                param['JKQr'][1][1].real, param['JKQr'][2][1].real, param['JKQr'][2][2].real,
-                param['JKQr'][1][1].imag, param['JKQr'][2][1].imag, param['JKQr'][2][2].imag,
-                param['JKQb'][0][0], param['JKQb'][1][0], param['JKQb'][2][0],
-                param['JKQb'][1][1].real, param['JKQb'][2][1].real, param['JKQb'][2][2].real,
-                param['JKQb'][1][1].imag, param['JKQb'][2][1].imag, param['JKQb'][2][2].imag] # Radiation field
-                for param in parameters]
+                   param['x'], param['b'], param['h'], param['mu']] for param in parameters]
+    
         params = np.array(params)
         nus = profiles[0]['nus']
 
-        for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']:
-            # extract a subsample of the data to test
-            # np.random.seed(777)
-            # profiles_selec = np.random.randint(0, len(profiles), size=3)
-            # profiles_selec = [profiles[i]['eta_I'] for i in profiles_selec]
-
+        components = ['eps_I', 'eps_Q', 'eps_U', 'eps_V']
+        for coefficient in components:
             # extract the frequencies and the profile in eta_I (first profile)
             component = np.array([profiles[i][coefficient] for i in range(len(profiles))])
 
-            # show the reconstructed spectra using the PCA and the FFT
-            # plot_data(nus, profiles_selec, color='.b', show=True)
-
             # create a dictionary with the coefficients of the different models
             # and the instensities that are associated to each model
-            models_dict = {
-                'profiles'  : component,
-                'nus'    : nus,
-                'params' : params,
-                }
+            models_dict = { 'profiles' : component, 'nus' : nus, 'params' : params,}
 
             print(f'Saving data to {folder}model_ready_{coefficient}.pkl')
             # save the coefficients to a pkl for training the encoder-decoder network
