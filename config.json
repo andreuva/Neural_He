@@ -1,11 +1,11 @@
 {
     "coefficient" : "eta_Q",
-    "archiquecture" : "cnn",
-    "mlp_hidden_size" : [36, 64, 128, 256, 512, 512, 1024, 512, 512],
-    "cnn_hidden_size" : [32, 64, 128, 128, 64, 32],
+    "archiquecture" : "mlp",
+    "mlp_hidden_size" : [36, 64, 128, 256, 512, 512, 1024, 512, 512, 256, 128, 64, 36],
+    "cnn_hidden_size" : [32, 64, 128, 128, 64, 32, 16, 8],
     "gpu" : 0,
     "readir" : "../DATA/neural_he/spectra/",
-    "group_suffix" : "norm",
+    "group_suffix" : "init",
 
     "batch_size" : 512,
     "epochs" : 250,

@@ -49,11 +49,11 @@ savedir = f'./checkpoints/{basename}_{coefficient}_time_{timestr}/'
 if not os.path.exists(savedir):
     os.makedirs(savedir)
 # file to load the data from
-readfile = f'model_ready_1M_{coefficient}_normaliced_JKQ.pkl'
+readfile = f'modelD3_ready_1M_{coefficient}_normaliced.pkl'
 print('Reading data from: ', readir + readfile)
 
-wandb.init(project="neural-He", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
-           group = f"{archiquecture}-{hyperparameters['group_suffix']}", job_type = f"{coefficient}",
+wandb.init(project="neural-He-D3", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
+           group = f"D3-{archiquecture}-{hyperparameters['group_suffix']}", job_type = f"{coefficient}",
            config=hyperparameters, save_code=True, magic=True)
 
 # check if the GPU is available
