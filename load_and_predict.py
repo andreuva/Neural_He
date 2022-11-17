@@ -18,7 +18,7 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_mlp_eta_Q_time_20221026-211555'
+run_loaded = f'checkpoints/trained_model_mlp_eta_Q_time_20221116-134112'
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
 print(f'Loading the model from {run_loaded}')
@@ -28,7 +28,7 @@ checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
 coefficient = checkpoint['hyperparameters']['coefficient']
 archiquecture = checkpoint['hyperparameters']['archiquecture']
 readir = '../DATA/neural_he/spectra/' # sorted(glob('../DATA/neural_he/spectra/*'))[-2] + '/'
-readfile = f'model_ready_1M_{coefficient}_normaliced.pkl'
+readfile = f'model_ready_1M_{coefficient}_normaliced_{checkpoint["hyperparameters"]["group_suffix"]}.pkl'
 savedir = run_loaded + '/'
 
 print('Reading data from: ', readir + readfile)
