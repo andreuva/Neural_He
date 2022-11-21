@@ -7,7 +7,7 @@ print('Loading data...')
 for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']:
 
     data = []
-    folders = sorted(glob.glob('../DATA/neural_he/spectra/data_10M_*'))
+    folders = sorted(glob.glob('../dara/neural_he/spectra/data_10M_*'))
     for folder in folders:
         # if the folder is not actually a folder (is a file) move to the next
         if not os.path.isdir(folder):
@@ -23,9 +23,8 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
     data_join['profiles'] = np.array([data[i]['profiles'] for i in range(len(data))])
     data_join['nus'] = data[0]['nus']
 
-    [print(f'Length of datasets for key "{key}":',[len(data[i][key]) for i in range(len(data))],f' joint={len(data_join[key])}')
-     for key in data[0].keys()]
-    [print(f'Shape of each sample for key "{key}":',[len(data[i][key][0].shape) for i in range(len(data))],f' joint={data_join[key][0].shape}') for key in data[0].keys()]
+    [print(f'Length of datasets for key "{key}":',[len(data[i][key]) for i in range(len(data))],f' joint={data_join[key].shape}') for key in data[0].keys()]
+    [print(f'Shape of each sample for key "{key}":',[len(data[i][key].shape) for i in range(len(data))],f' joint={data_join[key].shape}') for key in data[0].keys()]
 
     params = data_join['params']
     params_minmax = (params - params.min(axis=0))/(params.max(axis=0) - params.min(axis=0))
@@ -50,9 +49,9 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
     else:
         data_join['profiles'] = data_join['profiles']/1e-12
 
-    with open(f'../DATA/neural_he/spectra/model_ready_10M_{coefficient}.pkl', 'wb') as f:
+    with open(f'../data/neural_he/spectra/model_ready_10M_{coefficient}.pkl', 'wb') as f:
         pkl.dump(data_join, f)
-    
+
     del data, data_join, params, params_minmax, params_normaliced, Jr, Jb
 
 print('Done!')
