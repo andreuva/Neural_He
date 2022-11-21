@@ -7,7 +7,7 @@ print('Loading data...')
 for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']:
 
     data = []
-    folders = sorted(glob.glob('../dara/neural_he/spectra/data_10M_*'))
+    folders = sorted(glob.glob('../data/neural_he/spectra/data_10M_*'))
     for folder in folders:
         # if the folder is not actually a folder (is a file) move to the next
         if not os.path.isdir(folder):
