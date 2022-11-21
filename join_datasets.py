@@ -21,6 +21,7 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
     data_join = {}
     data_join['params'] = np.array([data[i]['params'] for i in range(len(data))])
     data_join['profiles'] = np.array([data[i]['profiles'] for i in range(len(data))])
+    data_join['nus'] = data[0]['nus']
 
     [print(f'Length of datasets for key "{key}":',[len(data[i][key]) for i in range(len(data))],f' joint={len(data_join[key])}')
      for key in data[0].keys()]
