@@ -33,7 +33,7 @@ def plot_data(freq, profiles, color='b', show=False):
 
 if __name__ == "__main__":
     # load the data from the file
-    folders = sorted(glob.glob('../DATA/neural_he/spectra/data*'))
+    folders = sorted(glob.glob('../data/neural_he/spectra/data_D3*'))
     for folder in folders:
         # if the folder is not actually a folder (is a file) move to the next
         if not os.path.isdir(folder):
@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
             print(f'Saving data to {folder}model_ready_{coefficient}.pkl')
             # save the coefficients to a pkl for training the encoder-decoder network
-            with open(f'{folder}model_ready_{coefficient}.pkl', 'wb') as f:
+            with open(f'{folder}model_ready_D3_{coefficient}.pkl', 'wb') as f:
                 pkl.dump(models_dict, f)
             
         del models_dict, profiles, parameters, params, nus, component
