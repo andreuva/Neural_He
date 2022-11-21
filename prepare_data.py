@@ -5,7 +5,7 @@ import glob
 import os
 
 
-""" 
+"""
 Function to load the data from the file, extract the data of the frequencies and the different spectra in intensity
 and reshape from (n_x, n_y, n_freq) to (n_x*n_y, n_freq) and normalize it
 """
@@ -16,11 +16,11 @@ def load_data(path):
 
     with open(f'{path}profiles.pkl', 'rb') as f:
         profiles = pkl.load(f)
-    
+
     return parameters, profiles
 
 
-""" 
+"""
 Function to plot the data of the different spectra in intensity
 """
 def plot_data(freq, profiles, color='b', show=False):
@@ -33,7 +33,7 @@ def plot_data(freq, profiles, color='b', show=False):
 
 if __name__ == "__main__":
     # load the data from the file
-    folders = sorted(glob.glob('../DATA/neural_he/spectra/data_10M*'))
+    folders = sorted(glob.glob('../data/neural_he/spectra/data_10M*'))
     for folder in folders:
         # if the folder is not actually a folder (is a file) move to the next
         if not os.path.isdir(folder):
@@ -69,5 +69,5 @@ if __name__ == "__main__":
             # save the coefficients to a pkl for training the encoder-decoder network
             with open(f'{folder}model_ready_10M_{coefficient}.pkl', 'wb') as f:
                 pkl.dump(models_dict, f)
-            
+
         del models_dict, profiles, parameters, params, nus, component

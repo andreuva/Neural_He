@@ -19,12 +19,12 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
 
     # data_join = {key:np.concatenate((data_4[key], data_3[key], data_2[key], data_1[key])) for (key,value) in data_1.items()}
     data_join = {}
-    data_join['params'] = np.array([data[i]['params'] for i in range(len(data))])
-    data_join['profiles'] = np.array([data[i]['profiles'] for i in range(len(data))])
+    data_join['params'] = np.concatenate([data[i]['params'] for i in range(len(data))])
+    data_join['profiles'] = np.concatenate([data[i]['profiles'] for i in range(len(data))])
     data_join['nus'] = data[0]['nus']
 
-    [print(f'Length of datasets for key "{key}":',[len(data[i][key]) for i in range(len(data))],f' joint={data_join[key].shape}') for key in data[0].keys()]
-    [print(f'Shape of each sample for key "{key}":',[len(data[i][key].shape) for i in range(len(data))],f' joint={data_join[key].shape}') for key in data[0].keys()]
+    [print(f'Length of datasets for key "{key}":',[data[i][key].shape for i in range(len(data))],f' joint={data_join[key].shape}') for key in data[0].keys()]
+    [print(f'Shape of each sample for key "{key}":',[data[i][key].shape for i in range(len(data))],f' joint={data_join[key].shape}') for key in data[0].keys()]
 
     params = data_join['params']
     params_minmax = (params - params.min(axis=0))/(params.max(axis=0) - params.min(axis=0))
