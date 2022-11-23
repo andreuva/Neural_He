@@ -5,19 +5,34 @@ import torch.nn.functional as funct
 
 
 class MLP(torch.nn.Module):
+    """ 
+    Class for a simple fully connected NN with LeakyReLU activations
+    """
     def __init__(self, n_components, n_features, hidden_size=[128]):
+        """
+        PARAMETERS
+        ----------
+        n_components: int
+            Number of points in the wavelength grid (label points)
+        n_features: int
+            Number of parameters (features) in the dataset
+        hidden_size: list
+            List of integers with the number of neurons in each hidden layer
+        """
+        # Initialize the parent class
         super().__init__()
+        # save the parameters
         self.n_components = n_components
         self.n_features = n_features
-
+        # create the layers appending them to the list
         modules = []
         modules.append(nn.Linear(n_features, hidden_size[0]))
-        modules.append(nn.ReLU())
+        modules.append(nn.LeakyReLU())
         for i in range(len(hidden_size) - 1):
             modules.append(nn.Linear(hidden_size[i], hidden_size[i + 1]))
-            modules.append(nn.ReLU())
+            modules.append(nn.LeakyReLU())
         modules.append(nn.Linear(hidden_size[-1], n_components))
-
+        # create the model
         self.Linear = nn.Sequential(*modules)
 
     def forward(self, x):
@@ -25,120 +40,133 @@ class MLP(torch.nn.Module):
 
 
 class CNN(torch.nn.Module):
+    """ 
+    Class for a mixed 1D MLP and convolutional NN with LeakyReLU activations
+    INPUT --> MLP --> CNN --> MLP --> OUTPUT
+    """
     def __init__(self, n_components, n_features,
                        mlp_hiden_in=[64, 128, 256], mlp_hiden_out=[512], 
                        conv_hiden=[64], conv_kernel_size=5):
+        """
+        PARAMETERS
+        ----------
+        n_components: int
+            Number of points in the wavelength grid (label points)
+        n_features: int
+            Number of parameters (features) in the dataset
+        mlp_hiden_in: list
+            List of integers with the number of neurons in each hidden layer of the initial MLP
+        mlp_hiden_out: list
+            List of integers with the number of neurons in each hidden layer of the final MLP
+        conv_hiden: list
+            List of integers with the number of neurons in each hidden layer of the convolutional NN
+        conv_kernel_size: int
+            Size of the kernel in the convolutional NN
+        """
+        # Initialize the parent class
         super().__init__()
+
+        # save the parameters
         self.n_components = n_components
         self.n_features = n_features
-
         # Output dimension for the convolution (Input=64, 3 Maxpooling layers (in/2), 32 output channels)
         self.in_conv = mlp_hiden_in[-1]
         self.out_chanels = conv_hiden[-1]
         self.num_conv = len(conv_hiden)
+        # compute the output dimension of the convolutional NN
         self.out_conv = int(self.out_chanels*(self.in_conv/(2**self.num_conv)))
-
+        
+        # create the input MLP calling the class MLP
         self.MLP_input = MLP(self.in_conv, n_features, mlp_hiden_in)
 
+        # create the convolutional NN
         ccn_modules = []
         ccn_modules.append(nn.Conv1d(in_channels=1, out_channels=conv_hiden[0], kernel_size=conv_kernel_size, stride=1, padding=2))
-        ccn_modules.append(nn.ReLU())
+        ccn_modules.append(nn.LeakyReLU())
         ccn_modules.append(nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
         for i in range(len(conv_hiden) - 1):
             ccn_modules.append(nn.Conv1d(conv_hiden[i], conv_hiden[i + 1], kernel_size=conv_kernel_size, stride=1, padding=2))
-            ccn_modules.append(nn.ReLU())
+            ccn_modules.append(nn.LeakyReLU())
             ccn_modules.append(torch.nn.MaxPool1d(kernel_size=2, stride=2, padding=0))
 
+        # convert the list of modules to a sequential model
         self.CNN = torch.nn.Sequential(*ccn_modules)
+        # create the final MLP calling the class MLP
         self.MLP_output = MLP(n_components, self.out_conv, mlp_hiden_out)
     
-
+    # define the forward pass
     def forward(self, x):
+        # pass the input through the MLP
         x = self.MLP_input.forward(x)
+        # reshape the input for the convolutional NN
         x = x.view(-1, 1, self.in_conv)
+        # pass the input through the convolutional NN
         x = self.CNN(x)
+        # reshape the output of the convolutional NN for the MLP
         x = x.view(-1, self.out_conv)
+        # pass the input through the MLP
         x = self.MLP_output.forward(x)
         return  x
 
-###############################################################################
-#                        SIREN IMPLEMENTATION                                 #
-###############################################################################
-# Auxiliary functions 
-# Check if a variable is defined
-def exists(val):
-    return val is not None
 
+# constrained variational autoencoder
+class bVAE(torch.nn.Module):
+    """
+    Class for a constrained variational autoencoder with LeakyReLU activations and a Gaussian prior on the latent space 
+    """
+    def __init__(self, n_components, n_features, latent_dim=25, hidden_size=[128, 64, 32], beta=1):
+        """ 
+        PARAMETERS
+        ----------
+        n_components: int
+            Number of points in the wavelength grid (label points)
+        n_features: int
+            Number of parameters (features) in the dataset
+        latent_dim: int
+            Number of dimensions in the latent space
+        hidden_size: list
+            List of integers with the number of neurons in each hidden layer of the encoder and decoder (shared)
+        beta: float
+            Weight of the KL divergence in the loss function
+        """
+        self.n_components = n_components
+        self.n_features = n_features
+        self.latent_dim = latent_dim
+        self.beta = beta
 
-# Compute the Sinusoidal activation
-class Sine(nn.Module):
-    def __init__(self, w0 = 1.):
+        # Initialize the parent class
         super().__init__()
-        self.w0 = w0
+
+        self.encoder = MLP(n_components, hidden_size[-1], hidden_size=[128])
+        self.MLP_mu = torch.nn.Linear(hidden_size[-1], latent_dim)
+        self.MLP_logvar = torch.nn.Linear(hidden_size[-1], latent_dim)
+        self.decoder = MLP(hidden_size[-1], n_components, hidden_size=[128])
+
+    def encode(self, x):
+        return self.encoder(x)
+
+    def reparametrice(self, mu, logvar):
+        std = torch.exp(0.5*logvar)
+        eps = torch.randn_like(std)
+        return mu + eps*std
+
+    def decode(self, z):
+        return self.decoder(z)
+
     def forward(self, x):
-        return torch.sin(self.w0 * x)
+        encoded = self.encode(x)
+        mu = self.MLP_mu(encoded)
+        logvar = self.MLP_logvar(encoded)
 
-
-# Siren layer (Andres Asensio Ramos)
-class Siren(nn.Module):
-    def __init__(self, dim_in, dim_out, w0 = 30., c = 6., is_first = False, use_bias = True, activation = None):
-        super().__init__()
-        self.dim_in = dim_in
-        self.is_first = is_first
-
-        weight = torch.zeros(dim_out, dim_in)
-        bias = torch.zeros(dim_out) if use_bias else None
-        self.init_(weight, bias, c = c, w0 = w0)
-
-        self.weight = nn.Parameter(weight)
-        self.bias = nn.Parameter(bias) if use_bias else None
-        self.activation = Sine(w0) if activation is None else activation
-
-    def init_(self, weight, bias, c, w0):
-        dim = self.dim_in
-
-        w_std = (1 / dim) if self.is_first else (math.sqrt(c / dim) / w0)
-        weight.uniform_(-w_std, w_std)
-
-        if bias is not None:
-            bias.uniform_(-w_std, w_std)
-
-    def forward(self, x, gamma = None, beta = None):
-        out =  funct.linear(x, self.weight, self.bias)
-
-        # FiLM modulation
-        
-        if exists(gamma):
-            out = out * gamma
-
-        if exists(beta):
-            out = out + beta
-
-        out = self.activation(out)
+        if self.beta == 0:
+            z = mu
+        else:
+            z = self.reparametrice(mu, logvar)
+        out = self.decode(z)
         return out
 
+    def loss_function(self, recons, target, mu, logvar):
+        recon_loss = torch.nn.functional.mse_loss(recons, target)
+        kld_loss = torch.mean(-0.5 * torch.sum(1 + logvar - mu**2 - logvar.exp(), dim=1), dim=0)
 
-# siren network (Andres Asensio Ramos)
-class SirenNet(nn.Module):
-    def __init__(self, dim_in, dim_hidden, dim_out, num_layers, w0 = 1., w0_initial = 30., use_bias = True, final_activation = None):
-        super().__init__()
-        self.layers = nn.ModuleList([])
-
-        for ind in range(num_layers):
-            is_first = ind == 0
-            layer_w0 = w0_initial if is_first else w0
-            layer_dim_in = dim_in if is_first else dim_hidden
-
-            self.layers.append(Siren(
-                dim_in = layer_dim_in,
-                dim_out = dim_hidden,
-                w0 = layer_w0,
-                use_bias = use_bias,
-                is_first = is_first))
-
-        self.last_layer = Siren(dim_in = dim_hidden, dim_out = dim_out, w0 = w0, use_bias = use_bias, activation = final_activation)
-
-    def forward(self, x, gamma=None, beta=None):
-        for layer in self.layers:
-            x = layer(x, gamma=gamma, beta=beta)
-        return self.last_layer(x)
+        return recon_loss + self.beta * kld_loss, recon_loss, kld_loss*self.beta

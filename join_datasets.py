@@ -47,7 +47,7 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
     if coefficient == 'eta_I':
         data_join['profiles'] = data_join['profiles']/1e-9
     else:
-        data_join['profiles'] = data_join['profiles']/1e-12
+        data_join['profiles'] = data_join['profiles']/1e-11
 
     with open(f'../data/neural_he/spectra/model_ready_10M_{coefficient}.pkl', 'wb') as f:
         pkl.dump(data_join, f)

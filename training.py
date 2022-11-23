@@ -4,7 +4,7 @@ from tqdm import tqdm
 import torch
 import json
 from dataset import profiles_dataset
-from NN import MLP, SirenNet, CNN
+from NN import MLP, bVAE, CNN
 import time, os, glob
 from torchsummary import summary
 import wandb
@@ -97,14 +97,14 @@ print('Creating the training DataLoader ...')
 train_loader = torch.utils.data.DataLoader(dataset = dataset,
                                            batch_size = batch_size,
                                            shuffle = True,
-                                           pin_memory = False,
+                                           pin_memory = True,
                                            num_workers = 4)
 print('Creating the test DataLoader ...')
 # use only 4 cpus for loading
 test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
                                           batch_size = batch_size,
                                           shuffle = True,
-                                          pin_memory = False,
+                                          pin_memory = True,
                                           num_workers = 4)
 
 # Model Initialization
@@ -116,7 +116,7 @@ if archiquecture == 'mlp':
 elif archiquecture == 'cnn':
     model = CNN(dataset.n_components,  dataset.n_features, conv_hiden=cnn_hidden_size).to(device)
 elif archiquecture == 'vae':
-    model = SirenNet(dataset.n_components,  dataset.n_features).to(device)
+    model = bVAE(dataset.n_components,  dataset.n_features).to(device)
 else:
     raise ValueError('The architecture is not defined')
 
@@ -168,7 +168,7 @@ for epoch in range(epochs):
         train_loss_epoch += train_loss.item()
 
     # Storing the losses in a list for plotting
-    train_loss_epoch /= len(train_loader)
+    train_loss_epoch /= len(train_loader)*batch_size
     train_losses.append(train_loss_epoch)
 
     test_loss_epoch = 0
@@ -187,7 +187,7 @@ for epoch in range(epochs):
             test_loss_epoch += test_loss.item()
 
     # Storing the losses in a list for plotting
-    test_loss_epoch /= len(test_loader)
+    test_loss_epoch /= len(test_loader)*batch_size
     test_losses.append(test_loss_epoch)
 
     print(f"Epoch {epoch}: Train Loss: {train_loss_epoch:1.2e},"+
