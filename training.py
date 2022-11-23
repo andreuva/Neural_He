@@ -49,7 +49,7 @@ savedir = f'./checkpoints/{basename}_{coefficient}_time_{timestr}/'
 if not os.path.exists(savedir):
     os.makedirs(savedir)
 # file to load the data from
-readfile = f'model_ready_1M_{coefficient}_normaliced_{hyperparameters["group_suffix"]}.pkl'
+readfile = f'model_ready_{coefficient}_{hyperparameters["group_suffix"]}.pkl'
 hyperparameters['dataset'] = readfile
 print('Reading data from: ', readir + readfile)
 
@@ -115,7 +115,7 @@ if archiquecture == 'mlp':
     model = MLP(dataset.n_components,  dataset.n_features, mlp_hidden_size).to(device)
 elif archiquecture == 'cnn':
     model = CNN(dataset.n_components,  dataset.n_features, conv_hiden=cnn_hidden_size).to(device)
-elif archiquecture == 'siren':
+elif archiquecture == 'vae':
     model = SirenNet(dataset.n_components,  dataset.n_features).to(device)
 else:
     raise ValueError('The architecture is not defined')

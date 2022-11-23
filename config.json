@@ -4,12 +4,12 @@
     "mlp_hidden_size" : [36, 64, 128, 256, 512, 512, 1024, 512, 512],
     "cnn_hidden_size" : [32, 64, 128, 128, 64, 32],
     "gpu" : 0,
-    "readir" : "../DATA/neural_he/spectra/",
-    "group_suffix" : "QUV-12",
+    "readir" : "../data/neural_he/spectra/",
+    "group_suffix" : "10M",
 
-    "batch_size" : 512,
-    "epochs" : 250,
-    "learning_rate" : 5e-4,
+    "batch_size" : 1024,
+    "epochs" : 300,
+    "learning_rate" : 3e-3,
     "step_size_scheduler" : 35,
     "gamma_scheduler" : 0.45
 }
