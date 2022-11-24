@@ -43,8 +43,8 @@ gamma_scheduler = hyperparameters['gamma_scheduler']
 if not os.path.exists('./checkpoints'):
     os.makedirs('./checkpoints')
 # construct the base name to save the model
-basename = f'trained_model_{archiquecture}'
-savedir = f'./checkpoints/{basename}_{coefficient}_time_{timestr}/'
+basename = f'trained_model_{archiquecture}_{coefficient}_{hyperparameters["group_suffix"]}'
+savedir = f'./checkpoints/{basename}_time_{timestr}/'
 # check if there is a folder for the checkpoints and create it if not
 if not os.path.exists(savedir):
     os.makedirs(savedir)

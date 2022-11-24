@@ -33,7 +33,8 @@ def plot_data(freq, profiles, color='b', show=False):
 
 if __name__ == "__main__":
     # load the data from the file
-    folders = sorted(glob.glob('../data/neural_he/spectra/data_10M*'))
+    sufix = '10M'
+    folders = sorted(glob.glob(f'../data/neural_he/spectra/data_{sufix}*'))
     for folder in folders:
         # if the folder is not actually a folder (is a file) move to the next
         if not os.path.isdir(folder):
@@ -65,9 +66,9 @@ if __name__ == "__main__":
             # and the instensities that are associated to each model
             models_dict = { 'profiles' : component, 'nus' : nus, 'params' : params,}
 
-            print(f'Saving data to {folder}model_ready_10M_{coefficient}.pkl')
+            print(f'Saving data to {folder}model_ready_{coefficient}_{sufix}.pkl')
             # save the coefficients to a pkl for training the encoder-decoder network
-            with open(f'{folder}model_ready_10M_{coefficient}.pkl', 'wb') as f:
+            with open(f'{folder}model_ready_{coefficient}_{sufix}.pkl', 'wb') as f:
                 pkl.dump(models_dict, f)
 
         del models_dict, profiles, parameters, params, nus, component
