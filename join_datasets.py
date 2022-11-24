@@ -3,21 +3,21 @@ import glob
 import numpy as np
 import os
 
+sufix = '10M'
 print('Loading data...')
 for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']:
 
     data = []
-    folders = sorted(glob.glob('../data/neural_he/spectra/data_*'))
+    folders = sorted(glob.glob(f'../data/neural_he/spectra/data_{sufix}*'))
     for folder in folders:
         # if the folder is not actually a folder (is a file) move to the next
         if not os.path.isdir(folder):
             continue
         folder = folder + '/'
         print(f'Loading data from {folder}')
-        with open(f'{folder}model_ready_{coefficient}.pkl', 'rb') as f:
+        with open(f'{folder}model_ready_{coefficient}_{sufix}.pkl', 'rb') as f:
             data.append(pkl.load(f))
 
-    # data_join = {key:np.concatenate((data_4[key], data_3[key], data_2[key], data_1[key])) for (key,value) in data_1.items()}
     data_join = {}
     data_join['params'] = np.concatenate([data[i]['params'] for i in range(len(data))])
     data_join['profiles'] = np.concatenate([data[i]['profiles'] for i in range(len(data))])
@@ -49,7 +49,7 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
     else:
         data_join['profiles'] = data_join['profiles']/1e-11
 
-    with open(f'../data/neural_he/spectra/model_ready_{coefficient}_10M.pkl', 'wb') as f:
+    with open(f'../data/neural_he/spectra/model_ready_{coefficient}_{sufix}.pkl', 'wb') as f:
         pkl.dump(data_join, f)
 
     del data, data_join, params, params_minmax, params_normaliced, Jr, Jb
