@@ -9,14 +9,20 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
 
     data = []
     folders = sorted(glob.glob(f'../data/neural_he/spectra/data_{sufix}*'))
-    for folder in folders:
-        # if the folder is not actually a folder (is a file) move to the next
-        if not os.path.isdir(folder):
-            continue
-        folder = folder + '/'
-        print(f'Loading data from {folder}')
-        with open(f'{folder}model_ready_{coefficient}_{sufix}.pkl', 'rb') as f:
-            data.append(pkl.load(f))
+    # load the data from the file handling exceptions
+
+    try:
+        for folder in folders:
+            # if the folder is not actually a folder (is a file) move to the next
+            if not os.path.isdir(folder):
+                continue
+            folder = folder + '/'
+            print(f'Loading data from {folder}')
+            with open(f'{folder}model_ready_{coefficient}_{sufix}.pkl', 'rb') as f:
+                data.append(pkl.load(f))
+    except:
+        print(f'Error loading data from {folder}')
+        continue
 
     data_join = {}
     data_join['params'] = np.concatenate([data[i]['params'] for i in range(len(data))])
