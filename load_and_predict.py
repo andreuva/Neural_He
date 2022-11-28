@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from dataset import profiles_dataset
-from NN import MLP, CNN, SirenNet
+from NN import MLP, CNN, bVAE
 from tqdm import tqdm
 from glob import glob
 import matplotlib.pyplot as plt
@@ -18,7 +18,7 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_mlp_eta_Q_time_20221116-134112'
+run_loaded = f'checkpoints/trained_model_mlp_eta_I_1M_time_20221125-101654'
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
 print(f'Loading the model from {run_loaded}')
@@ -27,8 +27,8 @@ checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
 
 coefficient = checkpoint['hyperparameters']['coefficient']
 archiquecture = checkpoint['hyperparameters']['archiquecture']
-readir = '../DATA/neural_he/spectra/' # sorted(glob('../DATA/neural_he/spectra/*'))[-2] + '/'
-readfile = f'model_ready_1M_{coefficient}_normaliced_{checkpoint["hyperparameters"]["group_suffix"]}.pkl'
+readir = '../data/neural_he/spectra/' # sorted(glob('../DATA/neural_he/spectra/*'))[-2] + '/'
+readfile = f'model_ready_{coefficient}_{checkpoint["hyperparameters"]["group_suffix"]}.pkl'
 savedir = run_loaded + '/'
 
 print('Reading data from: ', readir + readfile)
@@ -42,7 +42,7 @@ elif archiquecture == 'mlp':
     model = MLP(test_dataset.n_components,  test_dataset.n_features,
                 checkpoint['hyperparameters']['mlp_hidden_size']).to(device)
 elif archiquecture == 'siren':
-    model = SirenNet(test_dataset.n_components,  test_dataset.n_features,
+    model = bVAE(test_dataset.n_components,  test_dataset.n_features,
                      checkpoint['hyperparameters']['siren_hidden_size']).to(device)
 else:
     raise ValueError('Architecture not recognized')

@@ -3,34 +3,32 @@ import glob
 import numpy as np
 import os
 
-sufix = '10M'
+sufix_database = ''
+sufix_dataset = '1M'
 print('Loading data...')
 for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']:
 
     data = []
-    folders = sorted(glob.glob(f'../data/neural_he/spectra/data_{sufix}*'))
-    # load the data from the file handling exceptions
+    folders = sorted(glob.glob(f'../data/neural_he/spectra/data_{sufix_database}*'))
 
-    try:
-        for folder in folders:
-            # if the folder is not actually a folder (is a file) move to the next
-            if not os.path.isdir(folder):
-                continue
-            folder = folder + '/'
-            print(f'Loading data from {folder}')
-            with open(f'{folder}model_ready_{coefficient}_{sufix}.pkl', 'rb') as f:
-                data.append(pkl.load(f))
-    except:
-        print(f'Error loading data from {folder}')
-        continue
+    for folder in folders:
+        # if the folder is not actually a folder (is a file) move to the next
+        if not os.path.isdir(folder):
+            continue
+        folder = folder + '/'
+        print(f'Loading data from {folder}')
+        with open(f'{folder}model_ready_{coefficient}_{sufix_database}.pkl', 'rb') as f:
+            data.append(pkl.load(f))
 
     data_join = {}
     data_join['params'] = np.concatenate([data[i]['params'] for i in range(len(data))])
     data_join['profiles'] = np.concatenate([data[i]['profiles'] for i in range(len(data))])
     data_join['nus'] = data[0]['nus']
 
-    [print(f'Length of datasets for key "{key}":',[data[i][key].shape for i in range(len(data))],f' joint={data_join[key].shape}') for key in data[0].keys()]
-    [print(f'Shape of each sample for key "{key}":',[data[i][key].shape for i in range(len(data))],f' joint={data_join[key].shape}') for key in data[0].keys()]
+    [print(f'Length of datasets for key "{key}":', [data[i][key].shape for i in range(len(data))],
+           f' joint={data_join[key].shape}') for key in data[0].keys()]
+    [print(f'Shape of each sample for key "{key}":',[data[i][key].shape for i in range(len(data))],
+           f' joint={data_join[key].shape}') for key in data[0].keys()]
 
     params = data_join['params']
     params_minmax = (params - params.min(axis=0))/(params.max(axis=0) - params.min(axis=0))
@@ -55,7 +53,7 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
     else:
         data_join['profiles'] = data_join['profiles']/1e-11
 
-    with open(f'../data/neural_he/spectra/model_ready_{coefficient}_{sufix}.pkl', 'wb') as f:
+    with open(f'../data/neural_he/spectra/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
         pkl.dump(data_join, f)
 
     del data, data_join, params, params_minmax, params_normaliced, Jr, Jb

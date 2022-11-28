@@ -131,7 +131,6 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
                                             step_size=step_size_scheduler,
                                             gamma=gamma_scheduler)
-# scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1, end_factor=1e-3, total_iters=epochs)
 
 train_losses = []
 test_losses = []
@@ -168,7 +167,7 @@ for epoch in range(epochs):
         train_loss_epoch += train_loss.item()
 
     # Storing the losses in a list for plotting
-    train_loss_epoch /= len(train_loader)*batch_size
+    train_loss_epoch /= len(train_loader)
     train_losses.append(train_loss_epoch)
 
     test_loss_epoch = 0
@@ -187,7 +186,7 @@ for epoch in range(epochs):
             test_loss_epoch += test_loss.item()
 
     # Storing the losses in a list for plotting
-    test_loss_epoch /= len(test_loader)*batch_size
+    test_loss_epoch /= len(test_loader)
     test_losses.append(test_loss_epoch)
 
     print(f"Epoch {epoch}: Train Loss: {train_loss_epoch:1.2e},"+
