@@ -1,6 +1,6 @@
 {
     "coefficient" : "eta_I",
-    "archiquecture" : "mlp",
+    "archiquecture" : "bVAE",
     "mlp_hidden_size" : [36, 64, 128, 256, 512, 512, 1024, 512, 512],
     "cnn_hidden_size" : [32, 64, 128, 128, 64, 32],
     "gpu" : 0,

@@ -6,7 +6,7 @@ import numpy as np
 
 # Define the dataset class for storing the data
 class profiles_dataset(torch.utils.data.Dataset):
-    def __init__(self, data_path, train=True, train_split=0.85):
+    def __init__(self, data_path, train=True, train_split=0.85, arquitecture=None):
         # Load the spectral data
         with open(data_path, 'rb') as f:
             data = pkl.load(f)
@@ -30,6 +30,9 @@ class profiles_dataset(torch.utils.data.Dataset):
         # Load the labels
         profiles = np.array(data['profiles'])
         self.labels = np.array(profiles[indices], dtype=np.float32)
+
+        if arquitecture == 'bVAE':
+            self.labels = self.data.copy()
 
         self.n_features = self.data.shape[1]
         self.n_components = self.labels.shape[1]

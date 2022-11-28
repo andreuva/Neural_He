@@ -18,8 +18,12 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
             continue
         folder = folder + '/'
         print(f'Loading data from {folder}')
-        with open(f'{folder}model_ready_{coefficient}_{sufix_database}.pkl', 'rb') as f:
-            data.append(pkl.load(f))
+        try:
+            with open(f'{folder}model_ready_{coefficient}_{sufix_database}.pkl', 'rb') as f:
+                data.append(pkl.load(f))
+        except:
+            print(f'Error loading data from {folder}')
+            continue
 
     data_join = {}
     data_join['params'] = np.concatenate([data[i]['params'] for i in range(len(data))])

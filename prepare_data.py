@@ -42,7 +42,12 @@ if __name__ == "__main__":
         folder = folder + '/'
         print(f'Loading data from {folder}')
 
-        parameters, profiles = load_data(folder)
+        try:
+            parameters, profiles = load_data(folder)
+        except:
+            print(f'Error loading data from {folder}')
+            continue
+
         # transform the parameters to save it into the dataset
         params = [[param['B'], param['B_inc'], param['B_az'],
                 param['mu'], param['chi'],
