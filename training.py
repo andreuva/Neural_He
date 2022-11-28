@@ -97,14 +97,14 @@ print('Creating the training DataLoader ...')
 train_loader = torch.utils.data.DataLoader(dataset = dataset,
                                            batch_size = batch_size,
                                            shuffle = True,
-                                           pin_memory = True,
+                                           pin_memory = False,
                                            num_workers = 4)
 print('Creating the test DataLoader ...')
 # use only 4 cpus for loading
 test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
                                           batch_size = batch_size,
                                           shuffle = True,
-                                          pin_memory = True,
+                                          pin_memory = False,
                                           num_workers = 4)
 
 # Model Initialization

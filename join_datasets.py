@@ -3,8 +3,8 @@ import glob
 import numpy as np
 import os
 
-sufix_database = ''
-sufix_dataset = '1M'
+sufix_database = '10M'
+sufix_dataset = '10M'
 print('Loading data...')
 for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']:
 
