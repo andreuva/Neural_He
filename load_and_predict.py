@@ -22,13 +22,13 @@ run_loaded = f'checkpoints/trained_model_mlp_eta_I_1M_time_20221125-101654'
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
 print(f'Loading the model from {run_loaded}')
-print(f'Loading the checkpoint {checkpoint}')
+print(f'Loading the checkpoint {checkpoint[len(run_loaded):]}')
 checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
 
 coefficient = checkpoint['hyperparameters']['coefficient']
 archiquecture = checkpoint['hyperparameters']['archiquecture']
-readir = '../data/neural_he/spectra/' # sorted(glob('../DATA/neural_he/spectra/*'))[-2] + '/'
-readfile = f'model_ready_{coefficient}_{checkpoint["hyperparameters"]["group_suffix"]}.pkl'
+readir = '../data/neural_he/spectra/'
+readfile = f'model_ready_{coefficient}_{checkpoint["hyperparameters"]["dataset"]}.pkl'
 savedir = run_loaded + '/'
 
 print('Reading data from: ', readir + readfile)
@@ -43,7 +43,7 @@ elif archiquecture == 'mlp':
                 checkpoint['hyperparameters']['mlp_hidden_size']).to(device)
 elif archiquecture == 'siren':
     model = bVAE(test_dataset.n_components,  test_dataset.n_features,
-                     checkpoint['hyperparameters']['siren_hidden_size']).to(device)
+                     checkpoint['hyperparameters']['bVAE']).to(device)
 else:
     raise ValueError('Architecture not recognized')
 model.load_state_dict(checkpoint['state_dict'])

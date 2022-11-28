@@ -9,7 +9,8 @@ print('Loading data...')
 for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']:
 
     data = []
-    folders = sorted(glob.glob(f'../data/neural_he/spectra/data_{sufix_database}*'))
+    base_folder = '../data/neural_he/spectra'
+    folders = sorted(glob.glob(f'{base_folder}/data_{sufix_database}*'))
 
     for folder in folders:
         # if the folder is not actually a folder (is a file) move to the next
@@ -53,7 +54,7 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
     else:
         data_join['profiles'] = data_join['profiles']/1e-11
 
-    with open(f'../data/neural_he/spectra/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
+    with open(f'{base_folder}/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
         pkl.dump(data_join, f)
 
     del data, data_join, params, params_minmax, params_normaliced, Jr, Jb

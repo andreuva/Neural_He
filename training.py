@@ -49,12 +49,12 @@ savedir = f'./checkpoints/{basename}_time_{timestr}/'
 if not os.path.exists(savedir):
     os.makedirs(savedir)
 # file to load the data from
-readfile = f'model_ready_{coefficient}_{hyperparameters["group_suffix"]}.pkl'
+readfile = f'model_ready_{coefficient}_{hyperparameters["dataset"]}.pkl'
 hyperparameters['dataset'] = readfile
 print('Reading data from: ', readir + readfile)
 
 wandb.init(project="neural-He", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
-           group = f"{archiquecture}-{hyperparameters['group_suffix']}", job_type = f"{coefficient}",
+           group = f"{archiquecture}-{hyperparameters['group_suffix']}-{hyperparameters['dataset']}", job_type = f"{coefficient}",
            config=hyperparameters, save_code=True, magic=True)
 
 # check if the GPU is available

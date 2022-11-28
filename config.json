@@ -5,7 +5,8 @@
     "cnn_hidden_size" : [32, 64, 128, 128, 64, 32],
     "gpu" : 0,
     "readir" : "../data/neural_he/spectra/",
-    "group_suffix" : "1M",
+    "group_suffix" : "init",
+    "dataset" : "1M",
 
     "batch_size" : 2048,
     "epochs" : 300,
