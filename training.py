@@ -26,12 +26,26 @@ hyperparameters['timestr'] = timestr
 # Definition parameters of the network
 coefficient = hyperparameters['coefficient']
 archiquecture = hyperparameters['archiquecture']
+readir = hyperparameters['readir']
 gpu = hyperparameters['gpu']
-if archiquecture == 'cnn':
-    cnn_hidden_size = hyperparameters['cnn_hidden_size']
-elif archiquecture == 'mlp':
-    mlp_hidden_size = hyperparameters['mlp_hidden_size']
-readir = hyperparameters['readir']      # sorted(glob.glob('../DATA/neural_he/spectra/*'))[-1]
+
+if archiquecture == 'mlp':
+    print('Using MLP')
+    mlp_hidden_size = hyperparameters['params'][archiquecture]['mlp_hidden_size']
+elif archiquecture == 'cnn':
+    print('Using CNN')
+    cnn_hidden_size = hyperparameters['params'][archiquecture]['cnn_hidden_size']
+    mlp_hiden_in = hyperparameters['params'][archiquecture]['mlp_hiden_in']
+    mlp_hiden_out = hyperparameters['params'][archiquecture]['mlp_hiden_out']
+    conv_kernel_size = hyperparameters['params'][archiquecture]['conv_kernel_size']
+elif archiquecture == 'bvae':
+    print('Using bVAE')
+    bvae_enc_size = hyperparameters['params'][archiquecture]['bvae_enc_size']
+    bvae_dec_size = hyperparameters['params'][archiquecture]['bvae_dec_size']
+    bvae_latent_size = hyperparameters['params'][archiquecture]['bvae_latent_size']
+    bvae_beta = hyperparameters['params'][archiquecture]['bvae_beta']
+else:
+    raise ValueError(f'The architecture "{archiquecture}" is not defined')
 
 # Training network parameters
 batch_size = hyperparameters['batch_size']
@@ -78,15 +92,15 @@ if (NVIDIA_SMI):
 # create the training and test dataset
 print('-'*50)
 print('Creating the training dataset ...')
-dataset = profiles_dataset(f'{readir}{readfile}', train=True)
-print('Creating the test dataset ...\n')
-test_dataset = profiles_dataset(f'{readir}{readfile}', train=False)
+dataset = profiles_dataset(f'{readir}{readfile}', train=True, archiquecture=archiquecture)
+print('\nCreating the test dataset ...')
+test_dataset = profiles_dataset(f'{readir}{readfile}', train=False, archiquecture=archiquecture)
 
 samples_test = set(test_dataset.indices)
 samples_train = set(dataset.indices)
 
 # check that the training and test sets are disjoint
-print('Number of training samples: {}'.format(len(samples_train)))
+print('\nNumber of training samples: {}'.format(len(samples_train)))
 print('Number of test samples: {}'.format(len(samples_test)))
 print('Number of samples in both sets: {}'.format(len(samples_train.intersection(samples_test))))
 assert(len(samples_test.intersection(samples_train)) == 0)
@@ -112,13 +126,23 @@ print('-'*50)
 print('Initializing the model ...\n')
 
 if archiquecture == 'mlp':
-    model = MLP(dataset.n_components,  dataset.n_features, mlp_hidden_size).to(device)
+    model = MLP(dataset.n_features, dataset.n_components, mlp_hidden_size).to(device)
 elif archiquecture == 'cnn':
-    model = CNN(dataset.n_components,  dataset.n_features, conv_hiden=cnn_hidden_size).to(device)
-elif archiquecture == 'vae':
-    model = bVAE(dataset.n_components,  dataset.n_features).to(device)
+    model = CNN(dataset.n_components, dataset.n_features, mlp_hiden_in, 
+                mlp_hiden_out, cnn_hidden_size, conv_kernel_size).to(device)
+elif archiquecture == 'bvae':
+    model = bVAE(dataset.n_components, dataset.n_features, bvae_latent_size,
+                 bvae_enc_size, bvae_dec_size, bvae_beta).to(device)
 else:
     raise ValueError('The architecture is not defined')
+
+
+# print the dataset dimensions
+print('Dataset dimensions:')
+print('Number of components: {}'.format(dataset.n_components))
+print('Number of features: {}'.format(dataset.n_features))
+print('Number of batches: {}'.format(len(train_loader)))
+print('Batch size: {}\n'.format(batch_size))
 
 summary(model, (1, dataset.n_features), batch_size=batch_size)
 

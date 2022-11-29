@@ -8,7 +8,7 @@ class MLP(torch.nn.Module):
     """ 
     Class for a simple fully connected NN with LeakyReLU activations
     """
-    def __init__(self, n_components, n_features, hidden_size=[128]):
+    def __init__(self, n_features, n_components, hidden_size=[128]):
         """
         PARAMETERS
         ----------
@@ -77,7 +77,7 @@ class CNN(torch.nn.Module):
         self.out_conv = int(self.out_chanels*(self.in_conv/(2**self.num_conv)))
         
         # create the input MLP calling the class MLP
-        self.MLP_input = MLP(self.in_conv, n_features, mlp_hiden_in)
+        self.MLP_input = MLP(n_features, self.in_conv, mlp_hiden_in)
 
         # create the convolutional NN
         ccn_modules = []
@@ -92,7 +92,7 @@ class CNN(torch.nn.Module):
         # convert the list of modules to a sequential model
         self.CNN = torch.nn.Sequential(*ccn_modules)
         # create the final MLP calling the class MLP
-        self.MLP_output = MLP(n_components, self.out_conv, mlp_hiden_out)
+        self.MLP_output = MLP(self.out_conv, n_components, mlp_hiden_out)
     
     # define the forward pass
     def forward(self, x):
@@ -114,8 +114,9 @@ class bVAE(torch.nn.Module):
     """
     Class for a constrained variational autoencoder with LeakyReLU activations and a Gaussian prior on the latent space 
     """
-    def __init__(self, n_components, n_features, latent_dim=25, hidden_size=[128, 64, 32], beta=1):
-        """ 
+    def __init__(self, n_components, n_features, latent_dim=25, 
+                 encoder_size=[256, 128, 64, 32], decoder_size=[32, 64, 128, 256], beta=0.0):
+        """
         PARAMETERS
         ----------
         n_components: int
@@ -137,10 +138,10 @@ class bVAE(torch.nn.Module):
         # Initialize the parent class
         super().__init__()
 
-        self.encoder = MLP(n_components, hidden_size[-1], hidden_size=[128])
-        self.MLP_mu = torch.nn.Linear(hidden_size[-1], latent_dim)
-        self.MLP_logvar = torch.nn.Linear(hidden_size[-1], latent_dim)
-        self.decoder = MLP(hidden_size[-1], n_components, hidden_size=[128])
+        self.encoder = MLP(n_components, encoder_size[-1], hidden_size=encoder_size)
+        self.MLP_mu = torch.nn.Linear(encoder_size[-1], latent_dim)
+        self.MLP_logvar = torch.nn.Linear(encoder_size[-1], latent_dim)
+        self.decoder = MLP(latent_dim, n_components, hidden_size=decoder_size)
 
     def encode(self, x):
         return self.encoder(x)

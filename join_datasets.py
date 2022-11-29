@@ -59,7 +59,7 @@ for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V
         data_join['profiles'] = data_join['profiles']/1e-11
 
     with open(f'{base_folder}/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
-        pkl.dump(data_join, f)
+        pkl.dump(data_join, f, protocol=pkl.HIGHEST_PROTOCOL)
 
     del data, data_join, params, params_minmax, params_normaliced, Jr, Jb
 
