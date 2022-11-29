@@ -18,7 +18,7 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_cnn_eta_I_init_time_20221128-081514'
+run_loaded = f'checkpoints/trained_model_bvae_eta_I_VAE_time_20221129-094345'
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
 print(f'Loading the model from {run_loaded}')
@@ -29,26 +29,35 @@ coefficient = checkpoint['hyperparameters']['coefficient']
 archiquecture = checkpoint['hyperparameters']['archiquecture']
 readir = '../data/neural_he/spectra/'
 readfile = f'{checkpoint["hyperparameters"]["dataset"]}'
+hyperparameters = checkpoint['hyperparameters']
 savedir = run_loaded + '/'
 
 print('Reading data from: ', readir + readfile)
 # create the dataset to test
 test_dataset = profiles_dataset(f'{readir}{readfile}', train=False, archiquecture=archiquecture)
 train_dataset = profiles_dataset(f'{readir}{readfile}', train=True, archiquecture=archiquecture)
-if archiquecture == 'cnn':
-    print('Using CNN')
-    model = CNN(test_dataset.n_components,  test_dataset.n_features,
-                conv_hiden=checkpoint['hyperparameters']['cnn_hidden_size']).to(device)
-elif archiquecture == 'mlp':
+if archiquecture == 'mlp':
     print('Using MLP')
-    model = MLP(test_dataset.n_features, test_dataset.n_components,
-                checkpoint['hyperparameters']['mlp_hidden_size']).to(device)
-elif archiquecture == 'bVAE':
+    mlp_hidden_size = hyperparameters['params'][archiquecture]['mlp_hidden_size']
+    model = MLP(test_dataset.n_features, test_dataset.n_components, mlp_hidden_size).to(device)
+elif archiquecture == 'cnn':
+    print('Using CNN')
+    cnn_hidden_size = hyperparameters['params'][archiquecture]['cnn_hidden_size']
+    mlp_hiden_in = hyperparameters['params'][archiquecture]['mlp_hiden_in']
+    mlp_hiden_out = hyperparameters['params'][archiquecture]['mlp_hiden_out']
+    conv_kernel_size = hyperparameters['params'][archiquecture]['conv_kernel_size']
+    model = CNN(test_dataset.n_components, test_dataset.n_features, mlp_hiden_in, 
+                mlp_hiden_out, cnn_hidden_size, conv_kernel_size).to(device)
+elif archiquecture == 'bvae':
     print('Using bVAE')
-    model = bVAE(test_dataset.n_components,  test_dataset.n_features,
-                     checkpoint['hyperparameters']['bVAE']).to(device)
+    bvae_enc_size = hyperparameters['params'][archiquecture]['bvae_enc_size']
+    bvae_dec_size = hyperparameters['params'][archiquecture]['bvae_dec_size']
+    bvae_latent_size = hyperparameters['params'][archiquecture]['bvae_latent_size']
+    bvae_beta = hyperparameters['params'][archiquecture]['bvae_beta']
+    model = bVAE(test_dataset.n_components, test_dataset.n_features, bvae_latent_size,
+                 bvae_enc_size, bvae_dec_size, bvae_beta).to(device)
 else:
-    raise ValueError('Architecture not recognized')
+    raise ValueError(f'The architecture "{archiquecture}" is not defined')
 model.load_state_dict(checkpoint['state_dict'])
 
 # select a random sample from the test dataset and test the network
