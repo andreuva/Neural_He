@@ -5,6 +5,7 @@ from NN import MLP, CNN, bVAE
 from tqdm import tqdm
 from glob import glob
 import matplotlib.pyplot as plt
+import corner
 
 # check if the GPU is available
 cuda = torch.cuda.is_available()
@@ -74,36 +75,35 @@ model.load_state_dict(checkpoint['state_dict'])
 
 # select a random sample from the test dataset and test the network
 # then plot the predicted output and the ground truth
-print('Ploting and saving Intiensities from the sampled populations from the test data ...\n')
-fig2, ax2 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
-for i, indx in tqdm(enumerate(np.random.randint(0,test_dataset.n_samples,25))):
+print('Ploting and saving latent space from the sampled populations from the test data ...\n')
+test_latent_samples = []
+for indx in tqdm(range(test_dataset.n_samples)):
     data, labels = test_dataset[indx]
+    encoded = model.encode(torch.tensor(data).to(device))
+    encoded = model.MLP_mu(encoded)
+    encoded = encoded.detach().cpu().numpy()
+    encoded = encoded.reshape((bvae_latent_size))
+    test_latent_samples.append(encoded)
 
-    reconstructed = model.forward(torch.tensor(data).to(device))
-    reconstructed = reconstructed.detach().cpu().numpy()
-    reconstructed = reconstructed.reshape(labels.shape)
+test_latent_samples = np.array(test_latent_samples)
+print('shape of the latent space: ', test_latent_samples.shape)
+figure = corner.corner(test_latent_samples) #[:, 0:5])
+figure.savefig(savedir + 'latent_space_test.png')
+plt.close(figure)
 
-    ax2.flat[i].plot(test_dataset.nus, labels, color='C0')
-    ax2.flat[i].plot(test_dataset.nus, reconstructed, color='C1')
-
-# saving the plots
-print('Saving the plots ...\n')
-fig2.savefig(f'{savedir}test_profiles.png', bbox_inches='tight')
-plt.close(fig2)
-
-print('Ploting and saving Intiensities from the sampled populations from the train data ...\n')
-fig2, ax2 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
-for i, indx in tqdm(enumerate(np.random.randint(0,train_dataset.n_samples,25))):
+# Do the same for the training dataset
+print('Ploting and saving latent space from the sampled populations from the training data ...\n')
+train_latent_samples = []
+for indx in tqdm(range(train_dataset.n_samples)):
     data, labels = train_dataset[indx]
+    encoded = model.encode(torch.tensor(data).to(device))
+    encoded = model.MLP_mu(encoded)
+    encoded = encoded.detach().cpu().numpy()
+    encoded = encoded.reshape((bvae_latent_size))
+    train_latent_samples.append(encoded)
 
-    reconstructed = model.forward(torch.tensor(data).to(device))
-    reconstructed = reconstructed.detach().cpu().numpy()
-    reconstructed = reconstructed.reshape(labels.shape)
-
-    ax2.flat[i].plot(train_dataset.nus, labels, color='C0')
-    ax2.flat[i].plot(train_dataset.nus, reconstructed, color='C1')
-
-# saving the plots
-print('Saving the plots ...\n')
-fig2.savefig(f'{savedir}train_profiles.png', bbox_inches='tight')
-plt.close(fig2)
+train_latent_samples = np.array(train_latent_samples)
+print('shape of the latent space: ', train_latent_samples.shape)
+figure = corner.corner(train_latent_samples) #[:, 0:5])
+figure.savefig(savedir + 'latent_space_train.png')
+plt.close(figure)

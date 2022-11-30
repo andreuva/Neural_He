@@ -239,9 +239,10 @@ for epoch in range(epochs):
                 'valid_loss': test_loss_epoch,
                 'learning_rate': scheduler.get_last_lr()[0],
                 'best_loss': best_loss,
+                'hyperparameters': hyperparameters
               })
     # Optional
-    wandb.watch(model)
+    # wandb.watch(model)
 
 # finished training
 end_time = time.time()
