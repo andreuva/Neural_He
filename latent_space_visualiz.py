@@ -19,7 +19,7 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_bvae_eta_I_VAE_time_20221129-094345'
+run_loaded = f'checkpoints/trained_model_bvae_eta_Q_VAE_time_20221129-094520'
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
 print(f'Loading the model from {run_loaded}')
@@ -89,21 +89,4 @@ test_latent_samples = np.array(test_latent_samples)
 print('shape of the latent space: ', test_latent_samples.shape)
 figure = corner.corner(test_latent_samples) #[:, 0:5])
 figure.savefig(savedir + 'latent_space_test.png')
-plt.close(figure)
-
-# Do the same for the training dataset
-print('Ploting and saving latent space from the sampled populations from the training data ...\n')
-train_latent_samples = []
-for indx in tqdm(range(train_dataset.n_samples)):
-    data, labels = train_dataset[indx]
-    encoded = model.encode(torch.tensor(data).to(device))
-    encoded = model.MLP_mu(encoded)
-    encoded = encoded.detach().cpu().numpy()
-    encoded = encoded.reshape((bvae_latent_size))
-    train_latent_samples.append(encoded)
-
-train_latent_samples = np.array(train_latent_samples)
-print('shape of the latent space: ', train_latent_samples.shape)
-figure = corner.corner(train_latent_samples) #[:, 0:5])
-figure.savefig(savedir + 'latent_space_train.png')
 plt.close(figure)
