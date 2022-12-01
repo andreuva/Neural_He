@@ -26,16 +26,17 @@ class profiles_dataset(torch.utils.data.Dataset):
         self.indices = indices
 
         # Load the samples (separate the training and test data)
-        self.data = np.array(data['params'][indices], dtype=np.float32)
-        # Load the labels
-        profiles = np.array(data['profiles'])
-        self.labels = np.array(profiles[indices], dtype=np.float32)
+        self.params = np.array(data['params'][indices], dtype=np.float32)
+        self.profiles = np.array(data['profiles'][indices], dtype=np.float32)
+
+        self.labels = self.profiles
 
         if archiquecture == 'bvae':
             print('Using bVAE architecture (autoencoder --> inputs = labels = profiles)')
-            self.data = self.labels.copy()
+            self.data = self.labels
         else:
             print('Using MLP or CNN architecture (inputs = parameters, labels = profiles)')
+            self.data = self.params
 
         self.n_features = self.data.shape[1]
         self.n_components = self.labels.shape[1]
@@ -44,6 +45,9 @@ class profiles_dataset(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         return self.data[index], self.labels[index]
+    
+    def __call__(self, index):
+        return self.data[index], self.labels[index], self.params[index]
 
     def __len__(self):
         return self.n_samples
