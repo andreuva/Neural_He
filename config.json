@@ -13,18 +13,18 @@
         "bvae": {
                 "bvae_enc_size" : [512, 512, 256, 256, 128, 64, 32],
                 "bvae_dec_size" : [32, 64, 128, 256, 256, 512, 512],
-                "bvae_latent_size" : 30,
+                "bvae_latent_size" : 25,
                 "bvae_beta" : 0.5
                 }
             },
 
     "gpu" : 0,
     "readir" : "../data/neural_he/spectra/",
-    "group_suffix" : "bVAE_05",
+    "group_suffix" : "bVAE_05_5M",
     "dataset" : "5M",
 
-    "batch_size" : 2048,
-    "epochs" : 350,
+    "batch_size" : 8192,
+    "epochs" : 400,
     "learning_rate" : 8.7e-4,
     "step_size_scheduler" : 75,
     "gamma_scheduler" : 0.7
