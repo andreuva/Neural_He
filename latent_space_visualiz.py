@@ -18,7 +18,7 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_bvae_eta_I_VAE_time_20221129-094345'
+run_loaded = f'checkpoints/trained_model_bvae_eta_Q_VAE_time_20221129-094520'
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
 print(f'Loading the model from {run_loaded}')
@@ -90,7 +90,20 @@ for indx in tqdm(range(test_dataset.n_samples)):
 
 test_latent_samples = np.array(test_latent_samples)
 test_temp_samples = np.array(test_temp_samples)
+test_temp_samples = np.log10(test_temp_samples)
 print('shape of the latent space: ', test_latent_samples.shape)
+
+# plot the last two dimensions of the latent space
+# dim1 = 27
+# dim2 = 4
+# plt.figure(figsize=(10, 10), dpi=300)
+# plt.scatter(test_latent_samples[:, dim1], test_latent_samples[:, dim2], c=test_temp_samples, cmap='plasma', s=0.05, alpha=0.15)
+# plt.colorbar()
+# plt.xlabel(f'latent space dimension {dim1}')
+# plt.ylabel(f'latent space dimension {dim2}')
+# plt.savefig(savedir + f'latent_space_dim{dim1}_dim{dim2}.png')
+# plt.close()
+# exit()
 
 # create a corner plot of the latent space with the temperature as colorcode
 # the temperature is in log scale
@@ -104,7 +117,7 @@ for i in tqdm(range(bvae_latent_size)):
             # remove the sharing of the y axis to avoid scale issues
             axis[i, j].get_shared_y_axes().remove(axis[i, j])
         else:
-            axis[i, j].scatter(test_latent_samples[:, j], test_latent_samples[:, i], c=test_temp_samples, cmap='viridis', s=0.1, alpha=0.1)
+            axis[i, j].scatter(test_latent_samples[:, j], test_latent_samples[:, i], c=test_temp_samples, cmap='plasma', s=0.05, alpha=0.15)
 
 print('\nSaving corner plot of the latent space ...')
 figure.savefig(savedir + 'latent_space_color_test.png')
