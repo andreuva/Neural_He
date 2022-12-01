@@ -5,7 +5,6 @@ from NN import MLP, CNN, bVAE
 from tqdm import tqdm
 from glob import glob
 import matplotlib.pyplot as plt
-import corner
 
 # check if the GPU is available
 cuda = torch.cuda.is_available()
@@ -19,7 +18,7 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_bvae_eta_Q_VAE_time_20221129-094520'
+run_loaded = f'checkpoints/trained_model_bvae_eta_I_VAE_time_20221129-094345'
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
 print(f'Loading the model from {run_loaded}')
@@ -48,7 +47,7 @@ print('-' * 80 + '\n')
 print('Reading data from: ', readir + readfile)
 # create the dataset to test
 test_dataset = profiles_dataset(f'{readir}{readfile}', train=False, archiquecture=archiquecture)
-train_dataset = profiles_dataset(f'{readir}{readfile}', train=True, archiquecture=archiquecture)
+# train_dataset = profiles_dataset(f'{readir}{readfile}', train=True, archiquecture=archiquecture)
 if archiquecture == 'mlp':
     print('Using MLP')
     mlp_hidden_size = hyperparameters['params'][archiquecture]['mlp_hidden_size']
@@ -75,18 +74,37 @@ model.load_state_dict(checkpoint['state_dict'])
 
 # select a random sample from the test dataset and test the network
 # then plot the predicted output and the ground truth
-print('Ploting and saving latent space from the sampled populations from the test data ...\n')
+print('\nComputing latent space from the sampled populations from the test data ...')
 test_latent_samples = []
+test_temp_samples = []
 for indx in tqdm(range(test_dataset.n_samples)):
-    data, labels = test_dataset[indx]
+    data, labels, params = test_dataset(indx)
+
     encoded = model.encode(torch.tensor(data).to(device))
     encoded = model.MLP_mu(encoded)
     encoded = encoded.detach().cpu().numpy()
     encoded = encoded.reshape((bvae_latent_size))
+
+    test_temp_samples.append(params[6])
     test_latent_samples.append(encoded)
 
 test_latent_samples = np.array(test_latent_samples)
+test_temp_samples = np.array(test_temp_samples)
 print('shape of the latent space: ', test_latent_samples.shape)
-figure = corner.corner(test_latent_samples) #[:, 0:5])
-figure.savefig(savedir + 'latent_space_test.png')
-plt.close(figure)
+
+# create a corner plot of the latent space with the temperature as colorcode
+# the temperature is in log scale
+print('\nPloting corner plot of the latent space ...')
+figure, axis = plt.subplots(nrows=bvae_latent_size, ncols=bvae_latent_size, figsize=(30, 20), sharex='col', sharey='row', dpi=200)
+for i in tqdm(range(bvae_latent_size)):
+    for j in range(bvae_latent_size):
+        if i == j:
+            axis[i, j].hist(test_latent_samples[:, i], bins=100, color='k')
+            axis[i, j].set_xlabel(f'latent space {i}')
+            # remove the sharing of the y axis to avoid scale issues
+            axis[i, j].get_shared_y_axes().remove(axis[i, j])
+        else:
+            axis[i, j].scatter(test_latent_samples[:, j], test_latent_samples[:, i], c=test_temp_samples, cmap='viridis', s=0.1, alpha=0.1)
+
+print('\nSaving corner plot of the latent space ...')
+figure.savefig(savedir + 'latent_space_color_test.png')

@@ -89,9 +89,9 @@ for i, indx in tqdm(enumerate(np.random.randint(0,test_dataset.n_samples,25))):
 # saving the plots
 print('Saving the plots ...\n')
 fig2.savefig(f'{savedir}test_profiles.png', bbox_inches='tight')
-plt.close(fig2)
+fig2.remove()
 
-print('Ploting and saving Intiensities from the sampled populations from the train data ...\n')
+print('Computing and ploting profiles from the sampled populations from the train data ...\n')
 fig2, ax2 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
 for i, indx in tqdm(enumerate(np.random.randint(0,train_dataset.n_samples,25))):
     data, labels = train_dataset[indx]
@@ -106,4 +106,3 @@ for i, indx in tqdm(enumerate(np.random.randint(0,train_dataset.n_samples,25))):
 # saving the plots
 print('Saving the plots ...\n')
 fig2.savefig(f'{savedir}train_profiles.png', bbox_inches='tight')
-plt.close(fig2)
