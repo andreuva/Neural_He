@@ -18,7 +18,7 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_bvae_eta_Q_VAE_time_20221129-094520'
+run_loaded = f'checkpoints/trained_model_bvae_eta_I_bVAE_05_5M_time_20221201-171032'
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
 print(f'Loading the model from {run_loaded}')

@@ -69,7 +69,11 @@ print('Reading data from: ', readir + readfile)
 
 wandb.init(project="neural-He", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
            group = f"{archiquecture}-{hyperparameters['group_suffix']}-{hyperparameters['dataset']}", job_type = f"{coefficient}",
-           config=hyperparameters, save_code=True, magic=True)
+           save_code=True)
+
+# add the hyperparameters to the wandb run one by one
+for key, value in hyperparameters.items():
+    wandb.config[key] = value
 
 # check if the GPU is available
 cuda = torch.cuda.is_available()
@@ -239,10 +243,10 @@ for epoch in range(epochs):
                 'valid_loss': test_loss_epoch,
                 'learning_rate': scheduler.get_last_lr()[0],
                 'best_loss': best_loss,
-                'hyperparameters': hyperparameters
               })
     # Optional
-    # wandb.watch(model)
+    if (epoch % 25 == 0):
+        wandb.watch(model)
 
 # finished training
 end_time = time.time()
@@ -261,3 +265,5 @@ print('Saving the losses ...')
 filename = f'{basename}_losses_{time.strftime("%Y%m%d-%H%M%S")}'
 np.savez(f'{savedir}' + filename + '.npz', train_losses, test_losses)
 print('Losses saved!\n')
+
+wandb.finish()

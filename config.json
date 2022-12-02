@@ -25,7 +25,7 @@
 
     "batch_size" : 8192,
     "epochs" : 400,
-    "learning_rate" : 8.7e-4,
-    "step_size_scheduler" : 75,
+    "learning_rate" : 6e-4,
+    "step_size_scheduler" : 85,
     "gamma_scheduler" : 0.7
 }
