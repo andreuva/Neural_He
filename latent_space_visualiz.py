@@ -112,12 +112,17 @@ figure, axis = plt.subplots(nrows=bvae_latent_size, ncols=bvae_latent_size, figs
 for i in tqdm(range(bvae_latent_size)):
     for j in range(bvae_latent_size):
         if i == j:
-            axis[i, j].hist(test_latent_samples[:, i], bins=100, color='k')
-            axis[i, j].set_xlabel(f'latent space {i}')
+            axis[i, j].hist(test_latent_samples[:, i], bins=20)
             # remove the sharing of the y axis to avoid scale issues
             axis[i, j].get_shared_y_axes().remove(axis[i, j])
         else:
-            axis[i, j].scatter(test_latent_samples[:, j], test_latent_samples[:, i], c=test_temp_samples, cmap='plasma', s=0.05, alpha=0.15)
+            # print just the points that lay in the percentile 99.9 in x and y
+            # this is to avoid the scale issues
+            x = test_latent_samples[:, i]
+            y = test_latent_samples[:, j]
+            x = x[np.where(x < np.percentile(x, 99.9))]
+            y = y[np.where(y < np.percentile(y, 99.9))]
+            axis[i, j].scatter(x, y, c=test_temp_samples, cmap='plasma', s=0.05, alpha=0.15)
 
 print('\nSaving corner plot of the latent space ...')
 figure.savefig(savedir + 'latent_space_color_test.png')
