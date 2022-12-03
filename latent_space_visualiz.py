@@ -120,9 +120,13 @@ for i in tqdm(range(bvae_latent_size)):
             # this is to avoid the scale issues
             x = test_latent_samples[:, i]
             y = test_latent_samples[:, j]
-            x = x[np.where(x < np.percentile(x, 99.9))]
-            y = y[np.where(y < np.percentile(y, 99.9))]
-            axis[i, j].scatter(x, y, c=test_temp_samples, cmap='plasma', s=0.05, alpha=0.15)
+            # select the indexes between the 0.1 and 99.9 percentile
+            x_indx = np.where((x > np.percentile(x, 0.1)) & (x < np.percentile(x, 99.9)))[0]
+            y_indx = np.where((y > np.percentile(y, 0.1)) & (y < np.percentile(y, 99.9)))[0]
+            # select the indexes that are in both x and y
+            indx = np.intersect1d(x_indx, y_indx)
+            # plot the points
+            axis[i, j].scatter(x[indx], y[indx], c=test_temp_samples[indx], cmap='plasma', s=0.05, alpha=0.15)
 
 print('\nSaving corner plot of the latent space ...')
 figure.savefig(savedir + 'latent_space_color_test.png')
