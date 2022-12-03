@@ -120,9 +120,9 @@ for i in tqdm(range(bvae_latent_size)):
             # this is to avoid the scale issues
             x = test_latent_samples[:, i]
             y = test_latent_samples[:, j]
-            # select the indexes between the 0.1 and 99.9 percentile
-            x_indx = np.where((x > np.percentile(x, 0.1)) & (x < np.percentile(x, 99.9)))[0]
-            y_indx = np.where((y > np.percentile(y, 0.1)) & (y < np.percentile(y, 99.9)))[0]
+            # select the indexes between the 2 and 98 percentile
+            x_indx = np.where((x > np.percentile(x, 2)) & (x < np.percentile(x, 98)))[0]
+            y_indx = np.where((y > np.percentile(y, 2)) & (y < np.percentile(y, 98)))[0]
             # select the indexes that are in both x and y
             indx = np.intersect1d(x_indx, y_indx)
             # plot the points
