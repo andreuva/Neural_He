@@ -111,22 +111,17 @@ print('\nPloting corner plot of the latent space ...')
 figure, axis = plt.subplots(nrows=bvae_latent_size, ncols=bvae_latent_size, figsize=(30, 20), sharex='col', sharey='row', dpi=200)
 for i in tqdm(range(bvae_latent_size)):
     for j in range(bvae_latent_size):
-        if i == j:
-            axis[i, j].hist(test_latent_samples[:, i], bins=20)
-            # remove the sharing of the y axis to avoid scale issues
-            axis[i, j].get_shared_y_axes().remove(axis[i, j])
-        else:
-            # print just the points that lay in the percentile 99.9 in x and y
-            # this is to avoid the scale issues
-            x = test_latent_samples[:, i]
-            y = test_latent_samples[:, j]
-            # select the indexes between the 2 and 98 percentile
-            x_indx = np.where((x > np.percentile(x, 2)) & (x < np.percentile(x, 98)))[0]
-            y_indx = np.where((y > np.percentile(y, 2)) & (y < np.percentile(y, 98)))[0]
-            # select the indexes that are in both x and y
-            indx = np.intersect1d(x_indx, y_indx)
-            # plot the points
-            axis[i, j].scatter(x[indx], y[indx], c=test_temp_samples[indx], cmap='plasma', s=0.05, alpha=0.15)
+        # print just the points that lay in the percentile 95 in x and y
+        # this is to avoid the scale issues
+        x = test_latent_samples[:, i]
+        y = test_latent_samples[:, j]
+        # select the indexes between the 5 and 95 percentile
+        x_indx = np.where((x > np.percentile(x, 5)) & (x < np.percentile(x, 95)))[0]
+        y_indx = np.where((y > np.percentile(y, 5)) & (y < np.percentile(y, 95)))[0]
+        # select the indexes that are in both x and y
+        indx = np.intersect1d(x_indx, y_indx)
+        # plot the points
+        axis[i, j].scatter(x[indx], y[indx], c=test_temp_samples[indx], cmap='plasma', s=0.05, alpha=0.15)
 
 print('\nSaving corner plot of the latent space ...')
 figure.savefig(savedir + 'latent_space_color_test.png')
