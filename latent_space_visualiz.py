@@ -108,20 +108,12 @@ print('shape of the latent space: ', test_latent_samples.shape)
 # create a corner plot of the latent space with the temperature as colorcode
 # the temperature is in log scale
 print('\nPloting corner plot of the latent space ...')
-figure, axis = plt.subplots(nrows=bvae_latent_size, ncols=bvae_latent_size, figsize=(30, 20), sharex='col', sharey='row', dpi=200)
+figure, axis = plt.subplots(nrows=bvae_latent_size, ncols=bvae_latent_size, figsize=(30, 20), dpi=200)
 for i in tqdm(range(bvae_latent_size)):
     for j in range(bvae_latent_size):
-        # print just the points that lay in the percentile 99.8 in x and y
-        # this is to avoid the scale issues
-        x = test_latent_samples[:, i]
-        y = test_latent_samples[:, j]
-        # select the indexes between the 0.2 and 99.8 percentile
-        x_indx = np.where((x > np.percentile(x, 0.2)) & (x < np.percentile(x, 99.8)))[0]
-        y_indx = np.where((y > np.percentile(y, 0.2)) & (y < np.percentile(y, 99.8)))[0]
-        # select the indexes that are in both x and y
-        indx = np.intersect1d(x_indx, y_indx)
-        # plot the points
-        axis[i, j].scatter(x[indx], y[indx], c=test_temp_samples[indx], cmap='plasma', s=0.05, alpha=0.15)
+        axis[i, j].scatter(test_latent_samples[:, j], test_latent_samples[:, i], c=test_temp_samples, cmap='plasma', s=0.5, alpha=0.5)
+        axis[i, j].set_xticks([])
+        axis[i, j].set_yticks([])
 
 print('\nSaving corner plot of the latent space ...')
 figure.savefig(savedir + 'latent_space_color_test.png')
