@@ -228,7 +228,7 @@ class bVAE(torch.nn.Module):
             Logarithm of the variance of the latent space
         """
         # compute the reconstruction loss
-        recon_loss = torch.nn.MSELoss(recons, target)
+        recon_loss = funct.mse_loss(recons, target)
         # compute the KL divergence
         kld_loss = torch.mean(-0.5 * torch.sum(1 + logvar - mu**2 - logvar.exp(), dim=1), dim=0)
 
