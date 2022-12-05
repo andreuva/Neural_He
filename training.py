@@ -175,14 +175,19 @@ for epoch in range(epochs):
     model.train()
     for (params, profiles) in tqdm(train_loader, desc = f"Epoch {epoch}/{epochs}", leave = False):
 
+        # move the data to the GPU
         params = params.to(device)
         profiles = profiles.to(device)
 
         # Forward pass
-        reconstructed = model(params)
-
-        # Calculating the loss function
-        train_loss = loss_function(reconstructed, profiles)
+        if archiquecture == 'bvae':
+            reconstructed, mu, logvar = model(params)
+            # Calculating the loss function
+            train_loss, recons_loss, kld_loss  = model.loss_function(reconstructed, profiles, mu, logvar)
+        else:
+            reconstructed = model(params)
+            # Calculating the loss function
+            train_loss = loss_function(reconstructed, profiles)
 
         # The gradients are set to zero,
         # the the gradient is computed and stored.
@@ -191,7 +196,7 @@ for epoch in range(epochs):
         train_loss.backward()
         optimizer.step()
 
-        # Compute loss
+        # save the loss for the epoch
         train_loss_epoch += train_loss.item()
 
     # Storing the losses in a list for plotting
@@ -207,9 +212,15 @@ for epoch in range(epochs):
             profiles = profiles.to(device)
 
             # Forward pass
-            reconstructed = model(params)
-            # Calculating the loss function
-            test_loss = loss_function(reconstructed, profiles)
+            if archiquecture == 'bvae':
+                reconstructed, mu, logvar = model(params)
+                # Calculating the loss function
+                test_loss, recons_loss, kld_loss  = model.loss_function(reconstructed, profiles, mu, logvar)
+            else:
+                reconstructed = model(params)
+                # Calculating the loss function
+                test_loss = loss_function(reconstructed, profiles)
+
             # Compute test loss
             test_loss_epoch += test_loss.item()
 

@@ -14,13 +14,13 @@
                 "bvae_enc_size" : [512, 512, 256, 256, 128, 64, 32],
                 "bvae_dec_size" : [32, 64, 128, 256, 256, 512, 512],
                 "bvae_latent_size" : 25,
-                "bvae_beta" : 0.5
+                "bvae_beta" : 0.0
                 }
             },
 
     "gpu" : 0,
     "readir" : "../data/neural_he/spectra/",
-    "group_suffix" : "bVAE_05_5M",
+    "group_suffix" : "bVAE_newloss",
     "dataset" : "5M",
 
     "batch_size" : 8192,
