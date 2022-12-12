@@ -34,6 +34,7 @@ class profiles_dataset(torch.utils.data.Dataset):
 
         self.n_features = self.data.shape[1]
         self.n_components = self.labels.shape[1]
+        self.n_params = self.params.shape[1]
         self.N_nus = len(data['nus'])
         self.nus = data['nus']
 

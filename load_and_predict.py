@@ -18,7 +18,7 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_bvae_eta_Q_new_aproach_test_time_20221205-123742'
+run_loaded = f'checkpoints/trained_model_bvae_eta_Q_new_aproach_test_time_20221212-082452'
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
 print(f'Loading the model from {run_loaded}')
@@ -72,7 +72,7 @@ for i, indx in tqdm(enumerate(np.random.randint(0,test_dataset.n_samples,25)), n
 
 # saving the plots
 print('Saving the plots ...\n')
-fig2.savefig(f'{savedir}test_profiles.png', bbox_inches='tight')
+fig2.savefig(f'{savedir}test_profiles_vae.png', bbox_inches='tight')
 
 print('Computing and ploting profiles from the sampled populations from the train data ...\n')
 fig2, ax2 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
@@ -88,4 +88,4 @@ for i, indx in tqdm(enumerate(np.random.randint(0,train_dataset.n_samples,25)), 
 
 # saving the plots
 print('Saving the plots ...\n')
-fig2.savefig(f'{savedir}train_profiles.png', bbox_inches='tight')
+fig2.savefig(f'{savedir}train_profiles_vae.png', bbox_inches='tight')

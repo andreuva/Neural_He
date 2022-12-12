@@ -1,0 +1,14 @@
+{
+    "gpu": 0,
+    "readir" : "checkpoints/",
+    "vae": "trained_model_bvae_eta_Q_bVAE_0_5M_time_20221202-084206",
+    "group_suffix" : "init",
+
+    "hidden_size" : [32, 64, 128, 256, 512, 256, 128, 64, 32],
+
+    "batch_size" : 8192,
+    "epochs" : 450,
+    "learning_rate" : 4.2e-4,
+    "step_size_scheduler" : 125,
+    "gamma_scheduler" : 0.7
+}

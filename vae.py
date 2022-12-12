@@ -5,16 +5,16 @@ import torch.nn.init as init
 from modules import siren
 
 class BetaVAE(nn.Module):
-    def __init__(self, 
-                dim_in, 
-                dim_out, 
-                enc_n_hidden, 
-                enc_dim_hidden, 
-                latent_size, 
-                siren_n_hidden, 
-                siren_dim_hidden, 
-                siren_w0, 
-                film_n_hidden, 
+    def __init__(self,
+                dim_in,
+                dim_out,
+                enc_n_hidden,
+                enc_dim_hidden,
+                latent_size,
+                siren_n_hidden,
+                siren_dim_hidden,
+                siren_w0,
+                film_n_hidden,
                 film_dim_hidden,
                 beta = 1.0):
 
@@ -57,10 +57,10 @@ class BetaVAE(nn.Module):
             kaiming_init(module)
 
         # Siren
-        self.siren = siren.SirenNet(dim_in = 1, 
-            dim_hidden = siren_dim_hidden, 
-            dim_out = dim_out, 
-            num_layers = siren_n_hidden, 
+        self.siren = siren.SirenNet(dim_in = 1,
+            dim_hidden = siren_dim_hidden,
+            dim_out = dim_out,
+            num_layers = siren_n_hidden,
             w0_initial = siren_w0)
 
     def encode(self, x):
@@ -95,7 +95,7 @@ class BetaVAE(nn.Module):
         
         return self.decode(z, tau), z, mu, logvar
 
-    def loss_function(self, recons, target, mu, log_var):        
+    def loss_function(self, recons, target, mu, log_var):
         recons_loss = F.mse_loss(recons, target)
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 

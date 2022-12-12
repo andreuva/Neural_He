@@ -1,13 +1,12 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 import torch
 import json
 from dataset import profiles_dataset
-from NN import MLP, bVAE, CNN
+from NN import bVAE
 import time, os, glob
 from torchsummary import summary
-# import wandb
+import wandb
 
 try:
     import nvidia_smi
@@ -16,7 +15,7 @@ except:
     NVIDIA_SMI = False
 
 # Parse configuration file
-config_file = 'config.json'
+config_file = 'config_vae.json'
 with open(config_file) as json_file:
     hyperparameters = json.load(json_file)
 
@@ -60,13 +59,13 @@ hyperparameters['dataset_file'] = readfile
 hyperparameters['dataset_dir'] = readir
 print('Reading data from: ', readir + readfile)
 
-# wandb.init(project="neural-He", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
-#            group = f"{archiquecture}-{hyperparameters['group_suffix']}-{hyperparameters['dataset']}", job_type = f"{coefficient}",
-#            save_code=True)
+wandb.init(project="neural-He", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
+           group = f"{archiquecture}-{hyperparameters['group_suffix']}-{hyperparameters['dataset']}", job_type = f"{coefficient}",
+           save_code=True)
 
-# # add the hyperparameters to the wandb run one by one
-# for key, value in hyperparameters.items():
-#     wandb.config[key] = value
+# add the hyperparameters to the wandb run one by one
+for key, value in hyperparameters.items():
+    wandb.config[key] = value
 
 # check if the GPU is available
 cuda = torch.cuda.is_available()
@@ -110,17 +109,17 @@ train_loader = torch.utils.data.DataLoader(dataset = dataset, batch_size = batch
 print('Creating the test DataLoader ...')
 test_loader = torch.utils.data.DataLoader(dataset = test_dataset, batch_size = batch_size, shuffle = True, pin_memory = False, num_workers = 4)
 
-# Model Initialization
-print('-'*50)
-print('Initializing the model ...\n')
-model = bVAE(dataset.n_components, dataset.n_features, latent_size, enc_size, dec_size, beta).to(device)
-
 # print the dataset dimensions
 print('Dataset dimensions:')
 print('Number of components: {}'.format(dataset.n_components))
 print('Number of features: {}'.format(dataset.n_features))
 print('Number of batches: {}'.format(len(train_loader)))
 print('Batch size: {}\n'.format(batch_size))
+
+# Model Initialization
+print('-'*50)
+print('Initializing the model ...\n')
+model = bVAE(dataset.n_components, dataset.n_features, latent_size, enc_size, dec_size, beta).to(device)
 
 summary(model, (1, dataset.n_features), batch_size=batch_size)
 
@@ -139,7 +138,9 @@ start_time = time.time()
 print('Start time: {}'.format(time.ctime()))
 print('-'*50 + '\n')
 for epoch in range(epochs):
-    train_loss_epoch, train_recons_loss_epoch, train_kld_loss_epoch = 0, 0, 0
+    train_loss_epoch = 0
+    train_recons_loss_epoch = 0
+    train_kld_loss_epoch = 0
     model.train()
     # training loop over the batches in the training set (tqdm for progress bar with 50 columns)
     for (data, labels, params) in tqdm(train_loader, desc=f"Epoch {epoch}/{epochs}", ncols=100):
@@ -153,6 +154,7 @@ for epoch in range(epochs):
         reconstructed, mu, logvar = model(data)
         # Calculating the loss function
         train_loss, train_recons_loss, train_kld_loss  = model.loss_function(reconstructed, labels, mu, logvar)
+        train_loss = train_recons_loss
 
         # The gradients are set to zero,
         # the the gradient is computed and stored.
@@ -172,7 +174,9 @@ for epoch in range(epochs):
     train_kld_loss_epoch /= len(train_loader)
     train_losses.append([train_loss_epoch, train_recons_loss_epoch, train_kld_loss_epoch])
 
-    test_loss_epoch, test_recons_loss_epoch, test_kld_loss_epoch = 0, 0, 0
+    test_loss_epoch = 0
+    test_recons_loss_epoch = 0
+    test_kld_loss_epoch = 0
     model.eval()
     with torch.no_grad():
         for (data, labels, params) in tqdm(test_loader, desc = f"Epoch Validation {epoch}/{epochs}", ncols=100):
@@ -185,6 +189,7 @@ for epoch in range(epochs):
             reconstructed, mu, logvar = model(data)
             # Calculating the loss function
             test_loss, test_recons_loss, test_kld_loss  = model.loss_function(reconstructed, labels, mu, logvar)
+            test_loss = test_recons_loss
 
             # Compute test loss
             test_loss_epoch += test_loss.item()
@@ -222,19 +227,19 @@ for epoch in range(epochs):
         torch.save(checkpoint, f'{savedir}' + filename + '.pth')
 
     scheduler.step()
-    # wandb.log({
-    #             'train_loss': train_loss_epoch,
-    #             'train_recons_loss': train_recons_loss_epoch,
-    #             'train_kld_loss': train_kld_loss_epoch,
-    #             'valid_loss': test_loss_epoch,
-    #             'valid_recons_loss': test_recons_loss_epoch,
-    #             'valid_kld_loss': test_kld_loss_epoch,
-    #             'learning_rate': scheduler.get_last_lr()[0],
-    #             'best_loss': best_loss,
-    #           })
+    wandb.log({
+                'train_loss': train_loss_epoch,
+                'train_recons_loss': train_recons_loss_epoch,
+                'train_kld_loss': train_kld_loss_epoch,
+                'valid_loss': test_loss_epoch,
+                'valid_recons_loss': test_recons_loss_epoch,
+                'valid_kld_loss': test_kld_loss_epoch,
+                'learning_rate': scheduler.get_last_lr()[0],
+                'best_loss': best_loss,
+              })
     # Optional
-    # if (epoch % 25 == 0):
-    #     wandb.watch(model)
+    if (epoch % 25 == 0):
+        wandb.watch(model)
 
 # finished training
 end_time = time.time()
@@ -254,4 +259,4 @@ filename = f'{basename}_losses_{time.strftime("%Y%m%d-%H%M%S")}'
 np.savez(f'{savedir}' + filename + '.npz', train_losses, test_losses)
 print('Losses saved!\n')
 
-# wandb.finish()
+wandb.finish()

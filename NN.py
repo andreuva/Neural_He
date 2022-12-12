@@ -11,10 +11,10 @@ class MLP(torch.nn.Module):
         """
         PARAMETERS
         ----------
-        n_components: int
-            Number of points in the wavelength grid (label points)
         n_features: int
             Number of parameters (features) in the dataset
+        n_components: int
+            Number of points in the wavelength grid (label points)
         hidden_size: list
             List of integers with the number of neurons in each hidden layer
         """
@@ -143,6 +143,19 @@ class mapping(torch.nn.Module):
     def forward(self, x):
         z = self.map(x)
         return z
+    
+    def loss_function(self, recons, target):
+        """
+        Loss function for the mapping
+        PARAMETERS
+        ----------
+        recons: torch.tensor
+            Reconstructed parameters
+        target: torch.tensor
+            True parameters
+        """
+        # compute the MSE loss
+        return funct.mse_loss(recons, target)
 
 
 # constrained variational autoencoder
