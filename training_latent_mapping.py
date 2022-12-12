@@ -120,7 +120,7 @@ for param in vae.parameters():
 
 
 wandb.init(project="neural-He", name=f"map-{coefficient}-{timestr}", entity="solar-iac",
-           group = f"{hyperparameters_map['group_suffix']}-{hyperparameters_vae['dataset']}", job_type = f"{coefficient}",
+           group = f"map-{hyperparameters_map['group_suffix']}-{hyperparameters_vae['dataset']}", job_type = f"{coefficient}",
            save_code=True)
 
 # add the hyperparameters to the wandb run one by one

@@ -5,7 +5,7 @@ import json
 from dataset import profiles_dataset
 from NN import bVAE
 import time, os, glob
-from torchsummary import summary
+# from torchsummary import summary
 import wandb
 
 try:
@@ -48,7 +48,7 @@ print('Creating the saving directory ...')
 if not os.path.exists('./checkpoints'):
     os.makedirs('./checkpoints')
 # construct the base name to save the model
-basename = f'trained_model_{archiquecture}_{coefficient}_{hyperparameters["group_suffix"]}'
+basename = f'trained_model_{coefficient}_{hyperparameters["group_suffix"]}_{beta}'
 savedir = f'./checkpoints/{basename}_time_{timestr}/'
 # check if there is a folder for the checkpoints and create it if not
 if not os.path.exists(savedir):
@@ -59,8 +59,8 @@ hyperparameters['dataset_file'] = readfile
 hyperparameters['dataset_dir'] = readir
 print('Reading data from: ', readir + readfile)
 
-wandb.init(project="neural-He", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
-           group = f"{archiquecture}-{hyperparameters['group_suffix']}-{hyperparameters['dataset']}", job_type = f"{coefficient}",
+wandb.init(project="neural-He", name=f"{coefficient}-{beta}-{timestr}", entity="solar-iac",
+           group = f"{hyperparameters['group_suffix']}-{hyperparameters['dataset']}-{beta}", job_type = f"{coefficient}",
            save_code=True)
 
 # add the hyperparameters to the wandb run one by one
@@ -121,7 +121,7 @@ print('-'*50)
 print('Initializing the model ...\n')
 model = bVAE(dataset.n_components, dataset.n_features, latent_size, enc_size, dec_size, beta).to(device)
 
-summary(model, (1, dataset.n_features), batch_size=batch_size)
+# summary(model, (1, dataset.n_features), batch_size=batch_size)
 
 # Using an Adam Optimizer with learning rate scheduler
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)

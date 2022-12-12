@@ -13,8 +13,8 @@
 
     "gpu" : 0,
     "readir" : "../data/neural_he/spectra/",
-    "group_suffix" : "new_aproach_test",
-    "dataset" : "1M",
+    "group_suffix" : "mapping",
+    "dataset" : "5M",
 
     "batch_size" : 8192,
     "epochs" : 100,
