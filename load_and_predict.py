@@ -1,7 +1,7 @@
 import numpy as np
 import torch
-from dataset import profiles_dataset
-from NN import MLP, CNN, bVAE
+from dataset import profiles_dataset, print_hyperparameters
+from NN import bVAE
 from tqdm import tqdm
 from glob import glob
 import matplotlib.pyplot as plt
@@ -18,7 +18,7 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_bvae_eta_Q_bVAE_05_5M_time_20221201-171022'
+run_loaded = f'checkpoints/trained_model_bvae_eta_Q_new_aproach_test_time_20221205-123742'
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
 print(f'Loading the model from {run_loaded}')
@@ -27,59 +27,43 @@ checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
 
 coefficient = checkpoint['hyperparameters']['coefficient']
 archiquecture = checkpoint['hyperparameters']['archiquecture']
-readir = '../data/neural_he/spectra/'
-readfile = f'{checkpoint["hyperparameters"]["dataset"]}'
+readir = checkpoint['hyperparameters']['dataset_dir']
+readfile = checkpoint["hyperparameters"]["dataset_file"]
 hyperparameters = checkpoint['hyperparameters']
 savedir = run_loaded + '/'
 
 # print the hyperparameters (tabulated correctly) and loss
 print('\nHyperparameters')
 print('-' * 80)
-for key, value in hyperparameters.items():
-    if type(value) != dict:
-        print(f'{key:<25}: {value}')
-    else:
-        print(f'{key:<25}: {value[archiquecture]}')
+print_hyperparameters(hyperparameters)
 print(f'{"training loss":<25}: {checkpoint["train_loss"]}')
 print(f'{"validation loss":<25}: {checkpoint["valid_loss"]}')
 print('-' * 80 + '\n')
 
 print('Reading data from: ', readir + readfile)
 # create the dataset to test
-test_dataset = profiles_dataset(f'{readir}{readfile}', train=False, archiquecture=archiquecture)
-train_dataset = profiles_dataset(f'{readir}{readfile}', train=True, archiquecture=archiquecture)
-if archiquecture == 'mlp':
-    print('Using MLP')
-    mlp_hidden_size = hyperparameters['params'][archiquecture]['mlp_hidden_size']
-    model = MLP(test_dataset.n_features, test_dataset.n_components, mlp_hidden_size).to(device)
-elif archiquecture == 'cnn':
-    print('Using CNN')
-    cnn_hidden_size = hyperparameters['params'][archiquecture]['cnn_hidden_size']
-    mlp_hiden_in = hyperparameters['params'][archiquecture]['mlp_hiden_in']
-    mlp_hiden_out = hyperparameters['params'][archiquecture]['mlp_hiden_out']
-    conv_kernel_size = hyperparameters['params'][archiquecture]['conv_kernel_size']
-    model = CNN(test_dataset.n_components, test_dataset.n_features, mlp_hiden_in, 
-                mlp_hiden_out, cnn_hidden_size, conv_kernel_size).to(device)
-elif archiquecture == 'bvae':
-    print('Using bVAE')
-    bvae_enc_size = hyperparameters['params'][archiquecture]['bvae_enc_size']
-    bvae_dec_size = hyperparameters['params'][archiquecture]['bvae_dec_size']
-    bvae_latent_size = hyperparameters['params'][archiquecture]['bvae_latent_size']
-    bvae_beta = hyperparameters['params'][archiquecture]['bvae_beta']
-    model = bVAE(test_dataset.n_components, test_dataset.n_features, bvae_latent_size,
-                 bvae_enc_size, bvae_dec_size, bvae_beta).to(device)
-else:
-    raise ValueError(f'The architecture "{archiquecture}" is not defined')
+test_dataset = profiles_dataset(f'{readir}{readfile}', train=False)
+train_dataset = profiles_dataset(f'{readir}{readfile}', train=True)
+
+print(f'Using {archiquecture}')
+print('Loading the bvae parameters ...')
+enc_size = hyperparameters['params']['bvae']['enc_size']
+dec_size = hyperparameters['params']['bvae']['dec_size']
+latent_size = hyperparameters['params']['bvae']['latent_size']
+beta = hyperparameters['params']['bvae']['beta']
+
+# load the model
+model = bVAE(test_dataset.n_components, test_dataset.n_features, latent_size, enc_size, dec_size, beta).to(device)
 model.load_state_dict(checkpoint['state_dict'])
 
 # select a random sample from the test dataset and test the network
 # then plot the predicted output and the ground truth
 print('Ploting and saving Intiensities from the sampled populations from the test data ...\n')
 fig2, ax2 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
-for i, indx in tqdm(enumerate(np.random.randint(0,test_dataset.n_samples,25))):
-    data, labels = test_dataset[indx]
+for i, indx in tqdm(enumerate(np.random.randint(0,test_dataset.n_samples,25)), ncols=100):
+    data, labels, params = test_dataset[indx]
 
-    reconstructed = model.forward(torch.tensor(data).to(device))
+    reconstructed, mu, logvar = model.forward(torch.tensor(data).to(device))
     reconstructed = reconstructed.detach().cpu().numpy()
     reconstructed = reconstructed.reshape(labels.shape)
 
@@ -92,10 +76,10 @@ fig2.savefig(f'{savedir}test_profiles.png', bbox_inches='tight')
 
 print('Computing and ploting profiles from the sampled populations from the train data ...\n')
 fig2, ax2 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
-for i, indx in tqdm(enumerate(np.random.randint(0,train_dataset.n_samples,25))):
-    data, labels = train_dataset[indx]
+for i, indx in tqdm(enumerate(np.random.randint(0,train_dataset.n_samples,25)), ncols=100):
+    data, labels, params = train_dataset[indx]
 
-    reconstructed = model.forward(torch.tensor(data).to(device))
+    reconstructed, mu, logvar = model.forward(torch.tensor(data).to(device))
     reconstructed = reconstructed.detach().cpu().numpy()
     reconstructed = reconstructed.reshape(labels.shape)
 

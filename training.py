@@ -7,7 +7,7 @@ from dataset import profiles_dataset
 from NN import MLP, bVAE, CNN
 import time, os, glob
 from torchsummary import summary
-import wandb
+# import wandb
 
 try:
     import nvidia_smi
@@ -29,31 +29,23 @@ archiquecture = hyperparameters['archiquecture']
 readir = hyperparameters['readir']
 gpu = hyperparameters['gpu']
 
-if archiquecture == 'mlp':
-    print('Using MLP')
-    mlp_hidden_size = hyperparameters['params'][archiquecture]['mlp_hidden_size']
-elif archiquecture == 'cnn':
-    print('Using CNN')
-    cnn_hidden_size = hyperparameters['params'][archiquecture]['cnn_hidden_size']
-    mlp_hiden_in = hyperparameters['params'][archiquecture]['mlp_hiden_in']
-    mlp_hiden_out = hyperparameters['params'][archiquecture]['mlp_hiden_out']
-    conv_kernel_size = hyperparameters['params'][archiquecture]['conv_kernel_size']
-elif archiquecture == 'bvae':
-    print('Using bVAE')
-    bvae_enc_size = hyperparameters['params'][archiquecture]['bvae_enc_size']
-    bvae_dec_size = hyperparameters['params'][archiquecture]['bvae_dec_size']
-    bvae_latent_size = hyperparameters['params'][archiquecture]['bvae_latent_size']
-    bvae_beta = hyperparameters['params'][archiquecture]['bvae_beta']
-else:
-    raise ValueError(f'The architecture "{archiquecture}" is not defined')
+print(f'Using {archiquecture}')
+print('Loading the bvae parameters ...')
+enc_size = hyperparameters['params']['bvae']['enc_size']
+dec_size = hyperparameters['params']['bvae']['dec_size']
+latent_size = hyperparameters['params']['bvae']['latent_size']
+beta = hyperparameters['params']['bvae']['beta']
 
 # Training network parameters
+print('Loading the optimization parameters ...')
 batch_size = hyperparameters['batch_size']
 epochs = hyperparameters['epochs']
 learning_rate = hyperparameters['learning_rate']
 step_size_scheduler = hyperparameters['step_size_scheduler']
 gamma_scheduler = hyperparameters['gamma_scheduler']
 
+# Create the saving directory
+print('Creating the saving directory ...')
 if not os.path.exists('./checkpoints'):
     os.makedirs('./checkpoints')
 # construct the base name to save the model
@@ -64,16 +56,17 @@ if not os.path.exists(savedir):
     os.makedirs(savedir)
 # file to load the data from
 readfile = f'model_ready_{coefficient}_{hyperparameters["dataset"]}.pkl'
-hyperparameters['dataset'] = readfile
+hyperparameters['dataset_file'] = readfile
+hyperparameters['dataset_dir'] = readir
 print('Reading data from: ', readir + readfile)
 
-wandb.init(project="neural-He", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
-           group = f"{archiquecture}-{hyperparameters['group_suffix']}-{hyperparameters['dataset']}", job_type = f"{coefficient}",
-           save_code=True)
+# wandb.init(project="neural-He", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
+#            group = f"{archiquecture}-{hyperparameters['group_suffix']}-{hyperparameters['dataset']}", job_type = f"{coefficient}",
+#            save_code=True)
 
-# add the hyperparameters to the wandb run one by one
-for key, value in hyperparameters.items():
-    wandb.config[key] = value
+# # add the hyperparameters to the wandb run one by one
+# for key, value in hyperparameters.items():
+#     wandb.config[key] = value
 
 # check if the GPU is available
 cuda = torch.cuda.is_available()
@@ -96,9 +89,9 @@ if (NVIDIA_SMI):
 # create the training and test dataset
 print('-'*50)
 print('Creating the training dataset ...')
-dataset = profiles_dataset(f'{readir}{readfile}', train=True, archiquecture=archiquecture)
+dataset = profiles_dataset(f'{readir}{readfile}', train=True)
 print('\nCreating the test dataset ...')
-test_dataset = profiles_dataset(f'{readir}{readfile}', train=False, archiquecture=archiquecture)
+test_dataset = profiles_dataset(f'{readir}{readfile}', train=False)
 
 samples_test = set(test_dataset.indices)
 samples_train = set(dataset.indices)
@@ -111,35 +104,16 @@ assert(len(samples_test.intersection(samples_train)) == 0)
 print('Training and test sets are disjoint!\n')
 
 # DataLoader is used to load the dataset for training and testing
+# use only 4 cpus for loading the data
 print('Creating the training DataLoader ...')
-train_loader = torch.utils.data.DataLoader(dataset = dataset,
-                                           batch_size = batch_size,
-                                           shuffle = True,
-                                           pin_memory = False,
-                                           num_workers = 4)
+train_loader = torch.utils.data.DataLoader(dataset = dataset, batch_size = batch_size, shuffle = True, pin_memory = False, num_workers = 4)
 print('Creating the test DataLoader ...')
-# use only 4 cpus for loading
-test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
-                                          batch_size = batch_size,
-                                          shuffle = True,
-                                          pin_memory = False,
-                                          num_workers = 4)
+test_loader = torch.utils.data.DataLoader(dataset = test_dataset, batch_size = batch_size, shuffle = True, pin_memory = False, num_workers = 4)
 
 # Model Initialization
 print('-'*50)
 print('Initializing the model ...\n')
-
-if archiquecture == 'mlp':
-    model = MLP(dataset.n_features, dataset.n_components, mlp_hidden_size).to(device)
-elif archiquecture == 'cnn':
-    model = CNN(dataset.n_components, dataset.n_features, mlp_hiden_in, 
-                mlp_hiden_out, cnn_hidden_size, conv_kernel_size).to(device)
-elif archiquecture == 'bvae':
-    model = bVAE(dataset.n_components, dataset.n_features, bvae_latent_size,
-                 bvae_enc_size, bvae_dec_size, bvae_beta).to(device)
-else:
-    raise ValueError('The architecture is not defined')
-
+model = bVAE(dataset.n_components, dataset.n_features, latent_size, enc_size, dec_size, beta).to(device)
 
 # print the dataset dimensions
 print('Dataset dimensions:')
@@ -150,15 +124,9 @@ print('Batch size: {}\n'.format(batch_size))
 
 summary(model, (1, dataset.n_features), batch_size=batch_size)
 
-# Validation using MSE Loss function
-loss_function = torch.nn.MSELoss()
-
 # Using an Adam Optimizer with learning rate scheduler
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-# optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
-                                            step_size=step_size_scheduler,
-                                            gamma=gamma_scheduler)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size_scheduler, gamma=gamma_scheduler)
 
 train_losses = []
 test_losses = []
@@ -171,62 +139,63 @@ start_time = time.time()
 print('Start time: {}'.format(time.ctime()))
 print('-'*50 + '\n')
 for epoch in range(epochs):
-    train_loss_epoch = 0
+    train_loss_epoch, train_recons_loss_epoch, train_kld_loss_epoch = 0, 0, 0
     model.train()
-    for (params, profiles) in tqdm(train_loader, desc = f"Epoch {epoch}/{epochs}", leave = False):
+    # training loop over the batches in the training set (tqdm for progress bar with 50 columns)
+    for (data, labels, params) in tqdm(train_loader, desc=f"Epoch {epoch}/{epochs}", ncols=100):
 
         # move the data to the GPU
+        data = data.to(device)
+        labels = labels.to(device)
         params = params.to(device)
-        profiles = profiles.to(device)
 
         # Forward pass
-        if archiquecture == 'bvae':
-            reconstructed, mu, logvar = model(params)
-            # Calculating the loss function
-            train_loss, recons_loss, kld_loss  = model.loss_function(reconstructed, profiles, mu, logvar)
-        else:
-            reconstructed = model(params)
-            # Calculating the loss function
-            train_loss = loss_function(reconstructed, profiles)
+        reconstructed, mu, logvar = model(data)
+        # Calculating the loss function
+        train_loss, train_recons_loss, train_kld_loss  = model.loss_function(reconstructed, labels, mu, logvar)
 
         # The gradients are set to zero,
         # the the gradient is computed and stored.
         # .step() performs parameter update
         optimizer.zero_grad()
-        train_loss.backward()
+        train_recons_loss.backward()
         optimizer.step()
 
         # save the loss for the epoch
         train_loss_epoch += train_loss.item()
+        train_recons_loss_epoch += train_recons_loss.item()
+        train_kld_loss_epoch += train_kld_loss.item()
 
     # Storing the losses in a list for plotting
     train_loss_epoch /= len(train_loader)
-    train_losses.append(train_loss_epoch)
+    train_recons_loss_epoch /= len(train_loader)
+    train_kld_loss_epoch /= len(train_loader)
+    train_losses.append([train_loss_epoch, train_recons_loss_epoch, train_kld_loss_epoch])
 
-    test_loss_epoch = 0
+    test_loss_epoch, test_recons_loss_epoch, test_kld_loss_epoch = 0, 0, 0
     model.eval()
     with torch.no_grad():
-        for (params, profiles) in tqdm(test_loader, desc = f"Epoch Validation {epoch}/{epochs}", leave = False):
+        for (data, labels, params) in tqdm(test_loader, desc = f"Epoch Validation {epoch}/{epochs}", ncols=100):
 
+            data = data.to(device)
+            labels = labels.to(device)
             params = params.to(device)
-            profiles = profiles.to(device)
 
             # Forward pass
-            if archiquecture == 'bvae':
-                reconstructed, mu, logvar = model(params)
-                # Calculating the loss function
-                test_loss, recons_loss, kld_loss  = model.loss_function(reconstructed, profiles, mu, logvar)
-            else:
-                reconstructed = model(params)
-                # Calculating the loss function
-                test_loss = loss_function(reconstructed, profiles)
+            reconstructed, mu, logvar = model(data)
+            # Calculating the loss function
+            test_loss, test_recons_loss, test_kld_loss  = model.loss_function(reconstructed, labels, mu, logvar)
 
             # Compute test loss
             test_loss_epoch += test_loss.item()
+            test_recons_loss_epoch += test_recons_loss.item()
+            test_kld_loss_epoch += test_kld_loss.item()
 
     # Storing the losses in a list for plotting
     test_loss_epoch /= len(test_loader)
-    test_losses.append(test_loss_epoch)
+    test_recons_loss_epoch /= len(test_loader)
+    test_kld_loss_epoch /= len(test_loader)
+    test_losses.append([test_loss_epoch, test_recons_loss_epoch, test_kld_loss_epoch])
 
     print(f"Epoch {epoch}: Train Loss: {train_loss_epoch:1.2e},"+
                         f" Test Loss: {test_loss_epoch:1.2e},"+
@@ -239,7 +208,11 @@ for epoch in range(epochs):
             'epoch': epoch + 1,
             'state_dict': model.state_dict(),
             'train_loss': train_loss_epoch,
+            'train_recons_loss': train_recons_loss_epoch,
+            'train_kld_loss': train_kld_loss_epoch,
             'valid_loss': test_loss_epoch,
+            'valid_recons_loss': test_recons_loss_epoch,
+            'valid_kld_loss': test_kld_loss_epoch,
             'best_loss': best_loss,
             'hyperparameters': hyperparameters,
             'optimizer': optimizer.state_dict()}
@@ -249,15 +222,19 @@ for epoch in range(epochs):
         torch.save(checkpoint, f'{savedir}' + filename + '.pth')
 
     scheduler.step()
-    wandb.log({
-                'train_loss': train_loss_epoch,
-                'valid_loss': test_loss_epoch,
-                'learning_rate': scheduler.get_last_lr()[0],
-                'best_loss': best_loss,
-              })
+    # wandb.log({
+    #             'train_loss': train_loss_epoch,
+    #             'train_recons_loss': train_recons_loss_epoch,
+    #             'train_kld_loss': train_kld_loss_epoch,
+    #             'valid_loss': test_loss_epoch,
+    #             'valid_recons_loss': test_recons_loss_epoch,
+    #             'valid_kld_loss': test_kld_loss_epoch,
+    #             'learning_rate': scheduler.get_last_lr()[0],
+    #             'best_loss': best_loss,
+    #           })
     # Optional
-    if (epoch % 25 == 0):
-        wandb.watch(model)
+    # if (epoch % 25 == 0):
+    #     wandb.watch(model)
 
 # finished training
 end_time = time.time()
@@ -277,4 +254,4 @@ filename = f'{basename}_losses_{time.strftime("%Y%m%d-%H%M%S")}'
 np.savez(f'{savedir}' + filename + '.npz', train_losses, test_losses)
 print('Losses saved!\n')
 
-wandb.finish()
+# wandb.finish()

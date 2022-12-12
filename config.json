@@ -3,28 +3,21 @@
     "archiquecture" : "bvae",
 
     "params": {
-        "mlp" : {"mlp_hidden_size" : [36, 64, 128, 256, 512, 512, 1024, 512, 512]},
-        "cnn" : {
-                "mlp_hiden_in" : [64, 128, 256],
-                "cnn_hidden_size" : [32, 64, 128, 128, 64, 32],
-                "mlp_hiden_out" : [512],
-                "conv_kernel_size" : 5
-                },
         "bvae": {
-                "bvae_enc_size" : [512, 512, 256, 256, 128, 64, 32],
-                "bvae_dec_size" : [32, 64, 128, 256, 256, 512, 512],
-                "bvae_latent_size" : 25,
-                "bvae_beta" : 0.0
+                "enc_size" : [512, 512, 256, 256, 128, 64, 32],
+                "dec_size" : [32, 64, 128, 256, 256, 512, 512],
+                "latent_size" : 25,
+                "beta" : 0.0
                 }
             },
 
     "gpu" : 0,
     "readir" : "../data/neural_he/spectra/",
-    "group_suffix" : "bVAE_newloss",
-    "dataset" : "5M",
+    "group_suffix" : "new_aproach_test",
+    "dataset" : "1M",
 
     "batch_size" : 8192,
-    "epochs" : 400,
+    "epochs" : 100,
     "learning_rate" : 6e-4,
     "step_size_scheduler" : 85,
     "gamma_scheduler" : 0.7

@@ -6,7 +6,7 @@ import numpy as np
 
 # Define the dataset class for storing the data
 class profiles_dataset(torch.utils.data.Dataset):
-    def __init__(self, data_path, train=True, train_split=0.85, archiquecture=None):
+    def __init__(self, data_path, train=True, train_split=0.85):
         # Load the spectral data
         with open(data_path, 'rb') as f:
             data = pkl.load(f)
@@ -30,13 +30,7 @@ class profiles_dataset(torch.utils.data.Dataset):
         self.profiles = np.array(data['profiles'][indices], dtype=np.float32)
 
         self.labels = self.profiles
-
-        if archiquecture == 'bvae':
-            print('Using bVAE architecture (autoencoder --> inputs = labels = profiles)')
-            self.data = self.labels
-        else:
-            print('Using MLP or CNN architecture (inputs = parameters, labels = profiles)')
-            self.data = self.params
+        self.data = self.labels
 
         self.n_features = self.data.shape[1]
         self.n_components = self.labels.shape[1]
@@ -44,10 +38,16 @@ class profiles_dataset(torch.utils.data.Dataset):
         self.nus = data['nus']
 
     def __getitem__(self, index):
-        return self.data[index], self.labels[index]
-    
-    def __call__(self, index):
         return self.data[index], self.labels[index], self.params[index]
 
     def __len__(self):
         return self.n_samples
+
+
+def print_hyperparameters(hyperparameters: dict):
+    for key, value in hyperparameters.items():
+        if type(value) != dict:
+            print(f'{key:<25}: {value}')
+        else:
+            print(f'{key:<25}: ')
+            print_hyperparameters(value)
