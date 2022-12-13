@@ -1,5 +1,5 @@
 {
-    "gpu": 0,
+    "gpu": 2,
     "readir" : "checkpoints/",
     "vae": "",
     "group_suffix" : "initial_mapping",
@@ -7,8 +7,8 @@
     "hidden_size" : [32, 64, 128, 256, 512, 256, 128, 64, 32],
 
     "batch_size" : 8192,
-    "epochs" : 10,
-    "learning_rate" : 4.2e-4,
+    "epochs" : 800,
+    "learning_rate" : 6e-4,
     "step_size_scheduler" : 125,
     "gamma_scheduler" : 0.7
 }

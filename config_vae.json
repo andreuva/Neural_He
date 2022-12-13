@@ -1,5 +1,5 @@
 {
-    "coefficient" : "eta_Q",
+    "coefficient" : "eta_I",
     "archiquecture" : "bvae",
 
     "params": {
@@ -17,8 +17,8 @@
     "dataset" : "5M",
 
     "batch_size" : 8192,
-    "epochs" : 450,
+    "epochs" : 800,
     "learning_rate" : 6e-4,
-    "step_size_scheduler" : 85,
+    "step_size_scheduler" : 125,
     "gamma_scheduler" : 0.7
 }
