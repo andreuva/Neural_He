@@ -243,6 +243,9 @@ class bVAE(torch.nn.Module):
         # compute the reconstruction loss
         recon_loss = funct.mse_loss(recons, target)
         # compute the KL divergence
-        kld_loss = torch.mean(-0.5 * torch.sum(1 + logvar - mu**2 - logvar.exp(), dim=1), dim=0)
-
-        return recon_loss + self.beta * kld_loss, recon_loss, kld_loss*self.beta
+        if self.beta == 0:
+            kld_loss = torch.tensor(0.0)
+            return recon_loss, recon_loss, kld_loss*self.beta
+        else:
+            kld_loss = torch.mean(-0.5 * torch.sum(1 + logvar - mu**2 - logvar.exp(), dim=1), dim=0)
+            return recon_loss + self.beta * kld_loss, recon_loss, kld_loss*self.beta

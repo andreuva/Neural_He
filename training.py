@@ -154,13 +154,12 @@ for epoch in range(epochs):
         reconstructed, mu, logvar = model(data)
         # Calculating the loss function
         train_loss, train_recons_loss, train_kld_loss  = model.loss_function(reconstructed, labels, mu, logvar)
-        train_loss = train_recons_loss
 
         # The gradients are set to zero,
         # the the gradient is computed and stored.
         # .step() performs parameter update
         optimizer.zero_grad()
-        train_recons_loss.backward()
+        train_loss.backward()
         optimizer.step()
 
         # save the loss for the epoch
@@ -189,7 +188,6 @@ for epoch in range(epochs):
             reconstructed, mu, logvar = model(data)
             # Calculating the loss function
             test_loss, test_recons_loss, test_kld_loss  = model.loss_function(reconstructed, labels, mu, logvar)
-            test_loss = test_recons_loss
 
             # Compute test loss
             test_loss_epoch += test_loss.item()
