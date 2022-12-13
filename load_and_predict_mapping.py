@@ -18,7 +18,7 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_bvae_eta_Q_new_aproach_test_time_20221212-082452'
+run_loaded = f'checkpoints/'
 checkpoint_vae = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 checkpoint_map = sorted(glob(f'{run_loaded}/map_*'))[-1]
 checkpoint_map = sorted(glob(f'{checkpoint_map}/map_*.pth'))[-2]
