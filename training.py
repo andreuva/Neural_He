@@ -105,9 +105,9 @@ print('Training and test sets are disjoint!\n')
 # DataLoader is used to load the dataset for training and testing
 # use only 4 cpus for loading the data
 print('Creating the training DataLoader ...')
-train_loader = torch.utils.data.DataLoader(dataset = dataset, batch_size = batch_size, shuffle = True, pin_memory = False, num_workers = 4)
+train_loader = torch.utils.data.DataLoader(dataset = dataset, batch_size = batch_size, shuffle = True, pin_memory = False, num_workers = 2)
 print('Creating the test DataLoader ...')
-test_loader = torch.utils.data.DataLoader(dataset = test_dataset, batch_size = batch_size, shuffle = True, pin_memory = False, num_workers = 4)
+test_loader = torch.utils.data.DataLoader(dataset = test_dataset, batch_size = batch_size, shuffle = True, pin_memory = False, num_workers = 2)
 
 # print the dataset dimensions
 print('Dataset dimensions:')

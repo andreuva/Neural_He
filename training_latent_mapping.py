@@ -5,7 +5,7 @@ import json
 from dataset import profiles_dataset, print_hyperparameters
 from NN import bVAE, mapping
 import time, os, glob
-from torchsummary import summary
+# from torchsummary import summary
 import wandb
 
 try:
@@ -148,9 +148,9 @@ print('Training and test sets are disjoint!\n')
 # DataLoader is used to load the dataset for training and testing
 # use only 4 cpus for loading the data
 print('Creating the training DataLoader ...')
-train_loader = torch.utils.data.DataLoader(dataset = dataset, batch_size = batch_size, shuffle = True, pin_memory = False, num_workers = 4)
+train_loader = torch.utils.data.DataLoader(dataset = dataset, batch_size = batch_size, shuffle = True, pin_memory = False, num_workers = 2)
 print('Creating the test DataLoader ...')
-test_loader = torch.utils.data.DataLoader(dataset = test_dataset, batch_size = batch_size, shuffle = True, pin_memory = False, num_workers = 4)
+test_loader = torch.utils.data.DataLoader(dataset = test_dataset, batch_size = batch_size, shuffle = True, pin_memory = False, num_workers = 2)
 
 # print the dataset dimensions
 print('Dataset dimensions:')
@@ -164,7 +164,7 @@ print('-'*100)
 print('Initializing the maping model ...\n')
 model = mapping(dataset.n_params, latent_size, hidden_size).to(device)
 
-summary(model, (1, dataset.n_params), batch_size=batch_size)
+# summary(model, (1, dataset.n_params), batch_size=batch_size)
 
 # Using an Adam Optimizer with learning rate scheduler
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
