@@ -1,7 +1,6 @@
 import pickle as pkl
 import glob
 import numpy as np
-import scipy as sp
 
 import pickle as pkl
 import glob
@@ -37,7 +36,7 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
 
     # integrate the profiles in nus and then normalize them as min-max range
     profiles_normaliced = data_join['profiles'].copy()
-    profiles_normaliced = np.array([sp.integrate.simps(profile, data_join['nus']) for profile in profiles_normaliced])
+    profiles_normaliced = np.trapz(profiles_normaliced, data_join['nus'], axis=1)
     profiles_normaliced = (profiles_normaliced - profiles_normaliced.min(axis=0))/(profiles_normaliced.max(axis=0) - profiles_normaliced.min(axis=0))
 
     data_join['profiles'] = profiles_normaliced
