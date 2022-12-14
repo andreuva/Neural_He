@@ -1,13 +1,12 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 import torch
 import json
 from dataset import profiles_dataset
-from NN import MLP, SirenNet, CNN
+from NN import MLP, CNN
 import time, os, glob
 from torchsummary import summary
-import wandb
+# import wandb
 
 try:
     import nvidia_smi
@@ -52,9 +51,9 @@ if not os.path.exists(savedir):
 readfile = f'modelD3_ready_1M_{coefficient}_normaliced.pkl'
 print('Reading data from: ', readir + readfile)
 
-wandb.init(project="neural-He-D3", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
-           group = f"D3-{archiquecture}-{hyperparameters['group_suffix']}", job_type = f"{coefficient}",
-           config=hyperparameters, save_code=True, magic=True)
+# wandb.init(project="neural-He-D3", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
+#            group = f"D3-{archiquecture}-{hyperparameters['group_suffix']}", job_type = f"{coefficient}",
+#            config=hyperparameters, save_code=True, magic=True)
 
 # check if the GPU is available
 cuda = torch.cuda.is_available()
@@ -114,8 +113,6 @@ if archiquecture == 'mlp':
     model = MLP(dataset.n_components,  dataset.n_features, mlp_hidden_size).to(device)
 elif archiquecture == 'cnn':
     model = CNN(dataset.n_components,  dataset.n_features, conv_hiden=cnn_hidden_size).to(device)
-elif archiquecture == 'siren':
-    model = SirenNet(dataset.n_components,  dataset.n_features).to(device)
 else:
     raise ValueError('The architecture is not defined')
 
@@ -210,14 +207,15 @@ for epoch in range(epochs):
         torch.save(checkpoint, f'{savedir}' + filename + '.pth')
 
     scheduler.step()
-    wandb.log({
-                'train_loss': train_loss_epoch,
-                'valid_loss': test_loss_epoch,
-                'learning_rate': scheduler.get_last_lr()[0],
-                'best_loss': best_loss,
-              })
+    # wandb.log({
+    #             'train_loss': train_loss_epoch,
+    #             'valid_loss': test_loss_epoch,
+    #             'learning_rate': scheduler.get_last_lr()[0],
+    #             'best_loss': best_loss,
+    #           })
     # Optional
-    wandb.watch(model)
+    # if epoch % 30 == 0:
+    #     wandb.watch(model)
 
 # finished training
 end_time = time.time()
@@ -236,3 +234,5 @@ print('Saving the losses ...')
 filename = f'{basename}_losses_{time.strftime("%Y%m%d-%H%M%S")}'
 np.savez(f'{savedir}' + filename + '.npz', train_losses, test_losses)
 print('Losses saved!\n')
+
+# wandb.finish()

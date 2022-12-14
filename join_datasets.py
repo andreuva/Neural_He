@@ -9,7 +9,7 @@ import numpy as np
 import os
 
 print('Loading data...')
-for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']:
+for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
 
     data = []
     folders = sorted(glob.glob('../data/neural_he/spectra/data_D3*'))
