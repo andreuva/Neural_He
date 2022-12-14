@@ -8,10 +8,11 @@ import numpy as np
 import os
 
 print('Loading data...')
+root_dir = '../data/neural_he/spectra/'
 for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
 
     data = []
-    folders = sorted(glob.glob('../data/neural_he/spectra/data_D3*'))
+    folders = sorted(glob.glob(f'{root_dir}data_D3*'))
     for folder in folders:
         # if the folder is not actually a folder (is a file) move to the next
         if not os.path.isdir(folder):
@@ -41,7 +42,7 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
 
     data_join['profiles'] = profiles_normaliced
 
-    with open(f'../DATA/neural_he/spectra/model_ready_D3_{coefficient}_normaliced.pkl', 'wb') as f:
+    with open(f'{root_dir}model_ready_D3_{coefficient}_normaliced.pkl', 'wb') as f:
         pkl.dump(data_join, f)
 
     del data, data_join, params_normaliced
