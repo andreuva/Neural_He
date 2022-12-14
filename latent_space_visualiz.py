@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 # check if the GPU is available
 cuda = torch.cuda.is_available()
-gpu = 0
+gpu = 3
 device = torch.device(f"cuda:{gpu}" if cuda else "cpu")
 if cuda:
     print('GPU is available')
