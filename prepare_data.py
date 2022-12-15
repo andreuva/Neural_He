@@ -62,7 +62,7 @@ if __name__ == "__main__":
         params = np.array(params)
         nus = profiles[0]['nus']
 
-        components = ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']
+        components = ['eps_I', 'eps_Q', 'eps_U', 'eps_V', 'eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']
         for coefficient in components:
             # extract the frequencies and the profile in eta_I (first profile)
             component = np.array([profiles[i][coefficient] for i in range(len(profiles))])

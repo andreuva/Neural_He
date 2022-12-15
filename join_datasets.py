@@ -6,7 +6,7 @@ import os
 sufix_database = '10M'
 sufix_dataset = '10M'
 print('Loading data...')
-for coefficient in ['eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']:
+for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V', 'eta_I', 'eta_Q', 'eta_U', 'eta_V', 'rho_Q', 'rho_U', 'rho_V']:
 
     data = []
     base_folder = '../data/neural_he/spectra'
