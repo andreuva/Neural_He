@@ -3,7 +3,7 @@ import pickle as pkl
 import matplotlib.pyplot as plt
 from scipy import integrate
 
-with open('../DATA/neural_he/spectra/data_20220901_152322/model_ready_eta_I.pkl', 'rb') as f:
+with open('../data/neural_he/spectra/data_20220901_152322/model_ready_eta_I.pkl', 'rb') as f:
     data_1 = pkl.load(f)
 
 params = data_1['params'].copy()

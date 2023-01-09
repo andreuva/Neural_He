@@ -30,9 +30,13 @@ class profiles_dataset(torch.utils.data.Dataset):
         # Load the labels
         profiles = np.array(data['profiles'])
         self.labels = np.array(profiles[indices], dtype=np.float32)
-
+        
+        # print('Number of samples: {}'.format(self.n_samples))
+        # print('Number of features: {}'.format(self.data.shape[1]))
+        # print('Number of components: {}'.format(self.labels.shape[-1]))
+        # exit()
         self.n_features = self.data.shape[1]
-        self.n_components = self.labels.shape[1]
+        self.n_components = 1
         self.N_nus = len(data['nus'])
         self.nus = data['nus']
 

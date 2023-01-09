@@ -48,7 +48,7 @@ savedir = f'./checkpoints/{basename}_{coefficient}_time_{timestr}/'
 if not os.path.exists(savedir):
     os.makedirs(savedir)
 # file to load the data from
-readfile = f'modelD3_ready_1M_{coefficient}_normaliced.pkl'
+readfile = f'model_ready_D3_{coefficient}_normaliced.pkl'
 print('Reading data from: ', readir + readfile)
 
 # wandb.init(project="neural-He-D3", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
@@ -110,9 +110,9 @@ print('-'*50)
 print('Initializing the model ...\n')
 
 if archiquecture == 'mlp':
-    model = MLP(dataset.n_components,  dataset.n_features, mlp_hidden_size).to(device)
+    model = MLP(dataset.n_features,  dataset.n_components, mlp_hidden_size).to(device)
 elif archiquecture == 'cnn':
-    model = CNN(dataset.n_components,  dataset.n_features, conv_hiden=cnn_hidden_size).to(device)
+    model = CNN(dataset.n_features,  dataset.n_components, conv_hiden=cnn_hidden_size).to(device)
 else:
     raise ValueError('The architecture is not defined')
 
@@ -150,6 +150,9 @@ for epoch in range(epochs):
         # Forward pass
         reconstructed = model(params)
 
+        # reshape the reconstructed profiles to the same shape as the original profiles
+        reconstructed = reconstructed.view(profiles.shape)
+
         # Calculating the loss function
         train_loss = loss_function(reconstructed, profiles)
 
@@ -177,6 +180,10 @@ for epoch in range(epochs):
 
             # Forward pass
             reconstructed = model(params)
+
+            # reshape the reconstructed profiles to the same shape as the original profiles
+            reconstructed = reconstructed.view(profiles.shape)
+
             # Calculating the loss function
             test_loss = loss_function(reconstructed, profiles)
             # Compute test loss

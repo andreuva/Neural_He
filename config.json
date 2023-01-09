@@ -1,15 +1,15 @@
 {
-    "coefficient" : "eta_Q",
+    "coefficient" : "eps_Q",
     "archiquecture" : "mlp",
     "mlp_hidden_size" : [36, 64, 128, 256, 512, 512, 1024, 512, 512, 256, 128, 64, 36],
     "cnn_hidden_size" : [32, 64, 128, 128, 64, 32, 16, 8],
     "gpu" : 0,
-    "readir" : "../DATA/neural_he/spectra/",
+    "readir" : "../data/neural_he/spectra/",
     "group_suffix" : "init",
 
-    "batch_size" : 512,
-    "epochs" : 250,
-    "learning_rate" : 5e-4,
-    "step_size_scheduler" : 35,
-    "gamma_scheduler" : 0.45
+    "batch_size" : 2048,
+    "epochs" : 1024,
+    "learning_rate" : 3e-4,
+    "step_size_scheduler" : 100,
+    "gamma_scheduler" : 0.9
 }
