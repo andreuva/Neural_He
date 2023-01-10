@@ -6,6 +6,7 @@ import pickle as pkl
 import glob
 import numpy as np
 import os
+from scipy import integrate
 
 print('Loading data...')
 root_dir = '../data/neural_he/spectra/'
@@ -28,8 +29,15 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
     data_join['profiles'] = np.concatenate([data[i]['profiles'] for i in range(len(data))])
     data_join['nus'] = data[0]['nus']
 
-    [print(f'Length of datasets for key "{key}":',[data[i][key].shape for i in range(len(data))],f' joint={data_join[key].shape}') for key in data_join.keys()]
-    [print(f'Shape of each sample for key "{key}":',[data[i][key].shape for i in range(len(data))],f' joint={data_join[key].shape}') for key in data_join.keys()]
+    # select the D3 range
+    wavelengths = 2.998e8/data_join['nus']
+    wavelengths = wavelengths/1e-10
+    low_mask = wavelengths < 6000
+    high_mask = wavelengths > 5000
+    mask = low_mask * high_mask
+
+    # [print(f'Length of datasets for key "{key}":',[data[i][key].shape for i in range(len(data))],f' joint={data_join[key].shape}') for key in data_join.keys()]
+    # [print(f'Shape of each sample for key "{key}":',[data[i][key].shape for i in range(len(data))],f' joint={data_join[key].shape}') for key in data_join.keys()]
 
     params_normaliced = data_join['params'].copy()
     params_normaliced = (params_normaliced - params_normaliced.min(axis=0))/(params_normaliced.max(axis=0) - params_normaliced.min(axis=0))
@@ -37,8 +45,9 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
 
     # integrate the profiles in nus and then normalize them as min-max range
     profiles_normaliced = data_join['profiles'].copy()
-    profiles_normaliced = np.trapz(profiles_normaliced, data_join['nus'], axis=1)
-    profiles_normaliced = (profiles_normaliced - profiles_normaliced.min(axis=0))/(profiles_normaliced.max(axis=0) - profiles_normaliced.min(axis=0))
+    # profiles_normaliced = np.trapz(profiles_normaliced, data_join['nus'], axis=1)
+    profiles_normaliced = integrate.simps(profiles_normaliced[:,mask], data_join['nus'][mask], axis=1)
+    profiles_normaliced = profiles_normaliced/1e-9
 
     data_join['profiles'] = profiles_normaliced
 

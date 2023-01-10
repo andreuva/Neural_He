@@ -18,7 +18,10 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_mlp_eps_Q_time_20230107-155431'
+run_loaded = f'checkpoints/trained_model_mlp_eps_Q_time_20230109-122423'
+run_loaded = f'checkpoints/trained_model_mlp_eps_Q_time_20230109-140242'
+run_loaded = f'checkpoints/trained_model_mlp_eps_Q_time_20230109-170944'
+
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
 print(f'Loading the model from {run_loaded}')
@@ -60,6 +63,18 @@ for indx in tqdm(range(test_dataset.n_samples), desc = f"sample prediction", nco
     analisis.append([profiles, reconstructed, error])
 
 analisis = np.array(analisis)
+error_perc = analisis[:,2]/analisis[:,0]*100
+
+# plot a histogram of the relative error within the reconstructed sample
+plt.hist(error_perc, bins=500, range=(0,10))
+plt.show()
+
+# plot the predicted output and the ground truth
+plt.plot(analisis[:,0], analisis[:,1], '.', alpha=0.1)
+plt.plot([analisis[:,:1].min(), analisis[:,:1].max()], [analisis[:,:1].min(), analisis[:,:1].max()], 'k--')
+plt.xlabel('True')
+plt.ylabel('Predicted')
+plt.show()
 
 
 '''
