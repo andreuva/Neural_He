@@ -1,7 +1,7 @@
 import numpy as np
 import torch
-from dataset import profiles_dataset
-from NN import MLP, CNN, bVAE
+from dataset import profiles_dataset, print_hyperparameters
+from NN import MLP, CNN
 from tqdm import tqdm
 from glob import glob
 import matplotlib.pyplot as plt
@@ -18,7 +18,7 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_bvae_eta_Q_bVAE_05_5M_time_20221201-171022'
+run_loaded = f'checkpoints/'
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
 print(f'Loading the model from {run_loaded}')
@@ -27,19 +27,15 @@ checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
 
 coefficient = checkpoint['hyperparameters']['coefficient']
 archiquecture = checkpoint['hyperparameters']['archiquecture']
-readir = '../data/neural_he/spectra/'
-readfile = f'{checkpoint["hyperparameters"]["dataset"]}'
+readir = checkpoint['hyperparameters']['dataset_dir']
+readfile = checkpoint["hyperparameters"]["dataset_file"]
 hyperparameters = checkpoint['hyperparameters']
 savedir = run_loaded + '/'
 
 # print the hyperparameters (tabulated correctly) and loss
 print('\nHyperparameters')
 print('-' * 80)
-for key, value in hyperparameters.items():
-    if type(value) != dict:
-        print(f'{key:<25}: {value}')
-    else:
-        print(f'{key:<25}: {value[archiquecture]}')
+print_hyperparameters(hyperparameters)
 print(f'{"training loss":<25}: {checkpoint["train_loss"]}')
 print(f'{"validation loss":<25}: {checkpoint["valid_loss"]}')
 print('-' * 80 + '\n')
@@ -60,14 +56,6 @@ elif archiquecture == 'cnn':
     conv_kernel_size = hyperparameters['params'][archiquecture]['conv_kernel_size']
     model = CNN(test_dataset.n_components, test_dataset.n_features, mlp_hiden_in, 
                 mlp_hiden_out, cnn_hidden_size, conv_kernel_size).to(device)
-elif archiquecture == 'bvae':
-    print('Using bVAE')
-    bvae_enc_size = hyperparameters['params'][archiquecture]['bvae_enc_size']
-    bvae_dec_size = hyperparameters['params'][archiquecture]['bvae_dec_size']
-    bvae_latent_size = hyperparameters['params'][archiquecture]['bvae_latent_size']
-    bvae_beta = hyperparameters['params'][archiquecture]['bvae_beta']
-    model = bVAE(test_dataset.n_components, test_dataset.n_features, bvae_latent_size,
-                 bvae_enc_size, bvae_dec_size, bvae_beta).to(device)
 else:
     raise ValueError(f'The architecture "{archiquecture}" is not defined')
 model.load_state_dict(checkpoint['state_dict'])

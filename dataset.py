@@ -30,16 +30,12 @@ class profiles_dataset(torch.utils.data.Dataset):
         self.profiles = np.array(data['profiles'][indices], dtype=np.float32)
 
         self.labels = self.profiles
-
-        if archiquecture == 'bvae':
-            print('Using bVAE architecture (autoencoder --> inputs = labels = profiles)')
-            self.data = self.labels
-        else:
-            print('Using MLP or CNN architecture (inputs = parameters, labels = profiles)')
-            self.data = self.params
+        print('Using MLP or CNN architecture (inputs = parameters, labels = profiles)')
+        self.data = self.params
 
         self.n_features = self.data.shape[1]
         self.n_components = self.labels.shape[1]
+        self.n_params = self.params.shape[1]
         self.N_nus = len(data['nus'])
         self.nus = data['nus']
 
