@@ -3,7 +3,7 @@
     "archiquecture" : "mlp",
 
     "params": {
-        "mlp" : {"mlp_hidden_size" : [36, 64, 128, 256, 512, 1024, 2048, 1024, 512]},
+        "mlp" : {"mlp_hidden_size" : [36, 64, 128, 256, 512, 512, 1024, 512, 512]},
         "cnn" : {
                 "mlp_hiden_in" : [64, 128, 256],
                 "cnn_hidden_size" : [32, 64, 128, 128, 64, 32],
@@ -17,9 +17,9 @@
     "group_suffix" : "test_twocomp",
     "dataset" : "testtwocomp",
 
-    "batch_size" : 4096,
-    "epochs" : 4096,
-    "learning_rate" : 3e-3,
-    "step_size_scheduler" : 200,
-    "gamma_scheduler" : 0.87
+    "batch_size" : 8192,
+    "epochs" : 2050,
+    "learning_rate" : 5e-4,
+    "step_size_scheduler" : 150,
+    "gamma_scheduler" : 0.90
 }
