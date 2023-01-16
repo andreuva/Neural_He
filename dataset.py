@@ -47,3 +47,12 @@ class profiles_dataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return self.n_samples
+
+
+def print_hyperparameters(hyperparameters: dict):
+    for key, value in hyperparameters.items():
+        if type(value) != dict:
+            print(f'{key:<25}: {value}')
+        else:
+            print(f'{key:<25}: ')
+            print_hyperparameters(value)
