@@ -6,7 +6,7 @@ import json
 from dataset import profiles_dataset
 from NN import MLP, CNN
 import time, os, glob
-from torchsummary import summary
+# from torchsummary import summary
 import wandb
 
 try:
@@ -135,7 +135,7 @@ print('Number of features: {}'.format(dataset.n_features))
 print('Number of batches: {}'.format(len(train_loader)))
 print('Batch size: {}\n'.format(batch_size))
 
-summary(model, (1, dataset.n_features), batch_size=batch_size)
+# summary(model, (1, dataset.n_features), batch_size=batch_size)
 
 # Using an Adam Optimizer with learning rate scheduler
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
