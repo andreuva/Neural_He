@@ -6,7 +6,7 @@ from dataset import profiles_dataset
 from NN import MLP, CNN
 import time, os, glob
 from torchsummary import summary
-# import wandb
+import wandb
 
 try:
     import nvidia_smi
@@ -42,7 +42,7 @@ gamma_scheduler = hyperparameters['gamma_scheduler']
 if not os.path.exists('./checkpoints'):
     os.makedirs('./checkpoints')
 # construct the base name to save the model
-basename = f'trained_model_{archiquecture}'
+basename = f'trained_model_D3_{archiquecture}'
 savedir = f'./checkpoints/{basename}_{coefficient}_time_{timestr}/'
 # check if there is a folder for the checkpoints and create it if not
 if not os.path.exists(savedir):
@@ -51,9 +51,9 @@ if not os.path.exists(savedir):
 readfile = f'model_ready_D3_{coefficient}_normaliced.pkl'
 print('Reading data from: ', readir + readfile)
 
-# wandb.init(project="neural-He-D3", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
-#            group = f"D3-{archiquecture}-{hyperparameters['group_suffix']}", job_type = f"{coefficient}",
-#            config=hyperparameters, save_code=True, magic=True)
+wandb.init(project="neural-He-D3", name=f"{archiquecture}-{coefficient}-{timestr}", entity="solar-iac",
+           group = f"D3-{archiquecture}-{hyperparameters['group_suffix']}", job_type = f"{coefficient}",
+           config=hyperparameters, save_code=True, magic=True)
 
 # check if the GPU is available
 cuda = torch.cuda.is_available()
@@ -214,15 +214,15 @@ for epoch in range(epochs):
         torch.save(checkpoint, f'{savedir}' + filename + '.pth')
 
     scheduler.step()
-    # wandb.log({
-    #             'train_loss': train_loss_epoch,
-    #             'valid_loss': test_loss_epoch,
-    #             'learning_rate': scheduler.get_last_lr()[0],
-    #             'best_loss': best_loss,
-    #           })
+    wandb.log({
+                'train_loss': train_loss_epoch,
+                'valid_loss': test_loss_epoch,
+                'learning_rate': scheduler.get_last_lr()[0],
+                'best_loss': best_loss,
+              })
     # Optional
-    # if epoch % 30 == 0:
-    #     wandb.watch(model)
+    if epoch % 100 == 0:
+        wandb.watch(model)
 
 # finished training
 end_time = time.time()
@@ -242,4 +242,4 @@ filename = f'{basename}_losses_{time.strftime("%Y%m%d-%H%M%S")}'
 np.savez(f'{savedir}' + filename + '.npz', train_losses, test_losses)
 print('Losses saved!\n')
 
-# wandb.finish()
+wandb.finish()
