@@ -49,10 +49,10 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
     data_join['params'] = params_normaliced
     data_join['params_norm_coeffs'] = normalization_coefficients
     # histogram of the parameters
-    for i, param in enumerate(['B', 'B_inc', 'B_az', 'x', 'b', 'h', 'mu']):
-        plt.hist(params_normaliced[:,i], bins=500)
-        plt.title(param)
-        plt.show()
+    # for i, param in enumerate(['B', 'B_inc', 'B_az', 'x', 'b', 'h', 'mu']):
+    #     plt.hist(params_normaliced[:,i], bins=500)
+    #     plt.title(param)
+    #     plt.show()
 
     print('integrating profiles...')
     # integrate the profiles in nus and then normalize them as min-max range
@@ -79,9 +79,9 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
         # profiles_normaliced = (profiles_normaliced - profiles_normaliced.mean())/1e-4/(profiles_normaliced.max() - profiles_normaliced.min())
     
     # histogram of the integrated D3 profiles
-    plt.hist(profiles_normaliced, bins=2000, range=(-10,10))
-    plt.title(coefficient)
-    plt.show()
+    # plt.hist(profiles_normaliced, bins=2000, range=(-10,10))
+    # plt.title(coefficient)
+    # plt.show()
 
     data_join['profiles'] = profiles_normaliced
 
