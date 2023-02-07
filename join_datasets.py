@@ -89,14 +89,14 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
         pkl.dump(data_join, f)
 
     # save the normalization coefficients
-    with open(f'{root_dir}profile_normalization_coefficients_{coefficient}.pkl', 'wb') as f:
+    with open(f'{root_dir}profile_normalization_coefficients_D3_{coefficient}.pkl', 'wb') as f:
         pkl.dump(normalization_profile_coefficients, f)
     
     # check if the parameter normalization is already saved
-    if not os.path.exists(f'{root_dir}params_normalization_coefficients.pkl'):
+    if not os.path.exists(f'{root_dir}params_normalization_coefficients_D3.pkl'):
         print('Saving parameters normalization coefficients...')
         # save the params normalization coefficients
-        with open(f'{root_dir}params_normalization_coefficients.pkl', 'wb') as f:
+        with open(f'{root_dir}params_normalization_coefficients_D3.pkl', 'wb') as f:
             pkl.dump(normalization_coefficients, f)
 
     del data, data_join, params_normaliced
