@@ -26,22 +26,31 @@ class profiles_dataset(torch.utils.data.Dataset):
         self.indices = indices
 
         # Load the samples (separate the training and test data)
-        self.data = np.array(data['params'][indices], dtype=np.float32)
+        self.params = np.array(data['params'][indices], dtype=np.float32)
+        self.params_raw = np.array(data['params_raw'][indices])
+        self.params_norm = np.array(data['params_norm_coeffs'])
         # Load the labels
-        profiles = np.array(data['profiles'])
-        self.labels = np.array(profiles[indices], dtype=np.float32)
-        
+        self.profiles = np.array(data['profiles'][indices], dtype=np.float32)
+        self.profiles_raw = np.array(data['profiles_raw'][indices])
+        if 'eps_I' in data_path:
+            self.profiles_norm = np.array(data['prof_norm_coeffs'])
+        else:
+            self.profiles_norm = np.array(data['prof_norm_coeffs'][indices])
+
         # print('Number of samples: {}'.format(self.n_samples))
         # print('Number of features: {}'.format(self.data.shape[1]))
         # print('Number of components: {}'.format(self.labels.shape[-1]))
         # exit()
-        self.n_features = self.data.shape[1]
+        self.n_features = self.params.shape[1]
         self.n_components = 1
         self.N_nus = len(data['nus'])
         self.nus = data['nus']
 
     def __getitem__(self, index):
-        return self.data[index], self.labels[index]
+        return self.params[index], self.profiles[index]
+    
+    def return_raw_and_normalization(self, index):
+        return self.profiles_raw[index], self.params_raw[index], self.profiles_norm, self.params_norm
 
     def __len__(self):
         return self.n_samples

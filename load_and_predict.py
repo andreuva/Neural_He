@@ -5,6 +5,7 @@ from NN import MLP, CNN
 from tqdm import tqdm
 from glob import glob
 import matplotlib.pyplot as plt
+import pickle as pkl
 
 # check if the GPU is available
 cuda = torch.cuda.is_available()
@@ -20,7 +21,7 @@ else:
 
 run_loaded = f'checkpoints/trained_model_D3_mlp_eps_Q_time_20230207-162026'
 run_loaded = f'checkpoints/trained_model_D3_mlp_eps_U_time_20230207-162048'
-# run_loaded = f'checkpoints/trained_model_D3_mlp_eps_V_time_20230207-162117'
+run_loaded = f'checkpoints/trained_model_D3_mlp_eps_V_time_20230207-162117'
 # run_loaded = f'checkpoints/trained_model_D3_mlp_eps_I_time_20230207-161932'
 
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
@@ -39,6 +40,11 @@ print('Reading data from: ', readir + readfile)
 # create the dataset to test
 test_dataset = profiles_dataset(f'{readir}{readfile}', train=False)
 
+print('Reading normalization parameters from: ', readir + 'profile_normalization_coefficients_D3_eps_I.pkl')
+# load the normalization parameters
+with open(f'{readir}profile_normalization_coefficients_D3_eps_I.pkl', 'rb') as f:
+    norm_coeffs = pkl.load(f)
+
 if archiquecture == 'cnn':
     model = CNN(test_dataset.n_features,  test_dataset.n_components,
                 conv_hiden=checkpoint['hyperparameters']['cnn_hidden_size']).to(device)
@@ -56,18 +62,32 @@ print('Predicting the emission for the test dataset and plot the results ...\n')
 analisis = []
 for indx in tqdm(range(test_dataset.n_samples), desc = f"sample prediction", ncols=100):
     params, profiles = test_dataset[indx]
+    raw, params_raw, norm_coeffs, params_coefs = test_dataset.return_raw_and_normalization(indx)
 
     reconstructed = model.forward(torch.tensor(params).to(device))
     reconstructed = reconstructed.detach().cpu().numpy()
     reconstructed = reconstructed.reshape(profiles.shape)
-    error = np.abs(profiles - reconstructed)
-    analisis.append([profiles, reconstructed, error])
+    if coefficient == 'eps_I':
+        reconstructed = reconstructed*(norm_coeffs[0] - norm_coeffs[1]) + norm_coeffs[2]
+        reconstructed = 10**(reconstructed)
+    else:
+        reconstructed = reconstructed*norm_coeffs[indx]
+
+    error = np.abs(raw - reconstructed)
+    analisis.append([raw, reconstructed, error])
 
 analisis = np.array(analisis)
 error_perc = analisis[:,2]/analisis[:,0]*100
 
 # plot a histogram of the relative error within the reconstructed sample
+# mark the 1, 5 and 10 percentiles with vertical lines
 plt.hist(error_perc, bins=500)
+plt.axvline(np.percentile(error_perc, 90), color='green')
+plt.axvline(np.percentile(error_perc, 95), color='yellow')
+plt.axvline(np.percentile(error_perc, 99), color='red')
+plt.xlabel('Relative error (%)')
+plt.ylabel('Number of samples')
+plt.title(f'Relative error histogram for the reconstructed sample')
 plt.show()
 
 # plot the predicted output and the ground truth

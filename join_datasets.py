@@ -25,7 +25,7 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
 
     # data_join = {key:np.concatenate((data_4[key], data_3[key], data_2[key], data_1[key])) for (key,value) in data_1.items()}
     data_join = {}
-    data_join['params'] = np.concatenate([data[i]['params'] for i in range(len(data))])
+    data_join['params_raw'] = np.concatenate([data[i]['params'] for i in range(len(data))])
     data_join['profiles'] = np.concatenate([data[i]['profiles'] for i in range(len(data))])
     data_join['nus'] = data[0]['nus']
 
@@ -39,12 +39,12 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
     # [print(f'Length of datasets for key "{key}":',[data[i][key].shape for i in range(len(data))],f' joint={data_join[key].shape}') for key in data_join.keys()]
     # [print(f'Shape of each sample for key "{key}":',[data[i][key].shape for i in range(len(data))],f' joint={data_join[key].shape}') for key in data_join.keys()]
 
-    params_normaliced = data_join['params'].copy()
+    params_normaliced = data_join['params_raw'].copy()
     # normalize the parameters
     print('Normalizing parameters...')
-    normalization_coefficients = {'max': params_normaliced.max(axis=0),
-                                  'min': params_normaliced.min(axis=0),
-                                  'mean': params_normaliced.mean(axis=0)}
+    normalization_coefficients = [params_normaliced.max(axis=0),
+                                  params_normaliced.min(axis=0),
+                                  params_normaliced.mean(axis=0)]
     params_normaliced = (params_normaliced - params_normaliced.mean(axis=0))/(params_normaliced.max(axis=0) - params_normaliced.min(axis=0))
     data_join['params'] = params_normaliced
     data_join['params_norm_coeffs'] = normalization_coefficients
@@ -61,6 +61,7 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
     profiles_normaliced = data_join['profiles'].copy()
     # profiles_normaliced = np.trapz(profiles_normaliced, data_join['nus'], axis=1)
     profiles_normaliced = integrate.simps(profiles_normaliced[:,mask], data_join['nus'][mask], axis=1)
+    data_join['profiles_raw'] = profiles_normaliced.copy()
 
     print('Normalizing profiles...')
     if coefficient == 'eps_I':
@@ -69,9 +70,9 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
         # profiles_normaliced = 1e-8/(profiles_normaliced+1e-9)
         # profiles_normaliced = (profiles_normaliced - profiles_normaliced.mean())/profiles_normaliced.std()
         profiles_normaliced = np.log10(profiles_normaliced)
-        normalization_profile_coefficients = {'max': profiles_normaliced.max(),
-                                              'min': profiles_normaliced.min(),
-                                              'mean': profiles_normaliced.mean()}
+        normalization_profile_coefficients = [profiles_normaliced.max(),
+                                              profiles_normaliced.min(),
+                                              profiles_normaliced.mean()]
         data_join['prof_norm_coeffs'] = normalization_profile_coefficients
         profiles_normaliced = (profiles_normaliced - profiles_normaliced.mean())/(profiles_normaliced.max() - profiles_normaliced.min())
     else:
@@ -80,9 +81,9 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
         # profiles_normaliced = (profiles_normaliced - profiles_normaliced.mean())/profiles_normaliced.std()
         # profiles_normaliced = np.log10(profiles_normaliced-profiles_normaliced.min()*1.01)
         # profiles_normaliced = (profiles_normaliced - profiles_normaliced.mean())/1e-4/(profiles_normaliced.max() - profiles_normaliced.min())
+        data_join['prof_norm_coeffs'] = eps_I.copy()
 
     # saving the profiles raw and normalized data
-    data_join['profiles_raw'] = data_join['profiles'].copy()
     data_join['profiles'] = profiles_normaliced
 
     # make a mask to remove the outliers (5 and 95 percentile)
@@ -101,18 +102,6 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
 
     with open(f'{root_dir}model_ready_D3_{coefficient}_normaliced.pkl', 'wb') as f:
         pkl.dump(data_join, f)
-
-    # save the normalization coefficients
-    if coefficient == 'eps_I':
-        with open(f'{root_dir}profile_normalization_coefficients_D3_{coefficient}.pkl', 'wb') as f:
-            pkl.dump(normalization_profile_coefficients, f)
-    
-    # check if the parameter normalization is already saved
-    if not os.path.exists(f'{root_dir}params_normalization_coefficients_D3.pkl'):
-        print('Saving parameters normalization coefficients...')
-        # save the params normalization coefficients
-        with open(f'{root_dir}params_normalization_coefficients_D3.pkl', 'wb') as f:
-            pkl.dump(normalization_coefficients, f)
 
     del data, data_join, params_normaliced
 
