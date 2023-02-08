@@ -49,10 +49,12 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
     data_join['params'] = params_normaliced
     data_join['params_norm_coeffs'] = normalization_coefficients
     # histogram of the parameters
-    # for i, param in enumerate(['B', 'B_inc', 'B_az', 'x', 'b', 'h', 'mu']):
-    #     plt.hist(params_normaliced[:,i], bins=500)
-    #     plt.title(param)
-    #     plt.show()
+    # print('Plotting histograms...')
+    # if coefficient == 'eps_I':
+    #     for i, param in enumerate(['B', 'B_inc', 'B_az', 'x', 'b', 'h', 'mu']):
+    #         plt.hist(params_normaliced[:,i], bins=500)
+    #         plt.title(param)
+    #         plt.show()
 
     print('integrating profiles...')
     # integrate the profiles in nus and then normalize them as min-max range
@@ -62,6 +64,7 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
 
     print('Normalizing profiles...')
     if coefficient == 'eps_I':
+        eps_I = profiles_normaliced.copy()
         # profiles_normaliced = profiles_normaliced/1e-8
         # profiles_normaliced = 1e-8/(profiles_normaliced+1e-9)
         # profiles_normaliced = (profiles_normaliced - profiles_normaliced.mean())/profiles_normaliced.std()
@@ -72,25 +75,37 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
         data_join['prof_norm_coeffs'] = normalization_profile_coefficients
         profiles_normaliced = (profiles_normaliced - profiles_normaliced.mean())/(profiles_normaliced.max() - profiles_normaliced.min())
     else:
-        profiles_normaliced = profiles_normaliced/1e-9
+        profiles_normaliced = profiles_normaliced/eps_I
         # profiles_normaliced = 1e-11/(profiles_normaliced+1e-13)
         # profiles_normaliced = (profiles_normaliced - profiles_normaliced.mean())/profiles_normaliced.std()
         # profiles_normaliced = np.log10(profiles_normaliced-profiles_normaliced.min()*1.01)
         # profiles_normaliced = (profiles_normaliced - profiles_normaliced.mean())/1e-4/(profiles_normaliced.max() - profiles_normaliced.min())
-    
+
+    # saving the profiles raw and normalized data
+    data_join['profiles_raw'] = data_join['profiles'].copy()
+    data_join['profiles'] = profiles_normaliced
+
+    # make a mask to remove the outliers (5 and 95 percentile)
+    # print('Removing outliers...')
+    # mask = (profiles_normaliced > np.percentile(profiles_normaliced, 5)) * (profiles_normaliced < np.percentile(profiles_normaliced, 95))
+    # profiles_normaliced_in = profiles_normaliced[mask]
+    # profiles_normaliced_out = profiles_normaliced[~mask]
+
     # histogram of the integrated D3 profiles
-    # plt.hist(profiles_normaliced, bins=2000, range=(-10,10))
+    # print('Plotting histograms...')
+    # complete histogram
+    # plt.hist(profiles_normaliced_in, bins=2000, alpha=0.5)
+    # plt.hist(profiles_normaliced_out, bins=2000, alpha=0.5)
     # plt.title(coefficient)
     # plt.show()
-
-    data_join['profiles'] = profiles_normaliced
 
     with open(f'{root_dir}model_ready_D3_{coefficient}_normaliced.pkl', 'wb') as f:
         pkl.dump(data_join, f)
 
     # save the normalization coefficients
-    with open(f'{root_dir}profile_normalization_coefficients_D3_{coefficient}.pkl', 'wb') as f:
-        pkl.dump(normalization_profile_coefficients, f)
+    if coefficient == 'eps_I':
+        with open(f'{root_dir}profile_normalization_coefficients_D3_{coefficient}.pkl', 'wb') as f:
+            pkl.dump(normalization_profile_coefficients, f)
     
     # check if the parameter normalization is already saved
     if not os.path.exists(f'{root_dir}params_normalization_coefficients_D3.pkl'):

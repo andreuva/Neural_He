@@ -18,9 +18,10 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_mlp_eps_Q_time_20230109-122423'
-run_loaded = f'checkpoints/trained_model_mlp_eps_Q_time_20230109-140242'
-run_loaded = f'checkpoints/trained_model_mlp_eps_Q_time_20230109-170944'
+run_loaded = f'checkpoints/trained_model_D3_mlp_eps_Q_time_20230207-162026'
+run_loaded = f'checkpoints/trained_model_D3_mlp_eps_U_time_20230207-162048'
+# run_loaded = f'checkpoints/trained_model_D3_mlp_eps_V_time_20230207-162117'
+# run_loaded = f'checkpoints/trained_model_D3_mlp_eps_I_time_20230207-161932'
 
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
@@ -66,7 +67,7 @@ analisis = np.array(analisis)
 error_perc = analisis[:,2]/analisis[:,0]*100
 
 # plot a histogram of the relative error within the reconstructed sample
-plt.hist(error_perc, bins=500, range=(0,10))
+plt.hist(error_perc, bins=500)
 plt.show()
 
 # plot the predicted output and the ground truth
@@ -75,25 +76,3 @@ plt.plot([analisis[:,:1].min(), analisis[:,:1].max()], [analisis[:,:1].min(), an
 plt.xlabel('True')
 plt.ylabel('Predicted')
 plt.show()
-
-
-'''
-# select a random sample from the test dataset and test the network
-# then plot the predicted output and the ground truth
-print('Ploting and saving Intiensities from the sampled populations from the test data ...\n')
-fig2, ax2 = plt.subplots(nrows=5, ncols=5, figsize=(30, 20), sharex='col', dpi=200)
-for i, indx in tqdm(enumerate(np.random.randint(0,test_dataset.n_samples,25))):
-    params, profiles = test_dataset[indx]
-
-    reconstructed = model.forward(torch.tensor(params).to(device))
-    reconstructed = reconstructed.detach().cpu().numpy()
-    reconstructed = reconstructed.reshape(profiles.shape)
-
-    ax2.flat[i].plot(test_dataset.nus, profiles, color='C0')
-    ax2.flat[i].plot(test_dataset.nus, reconstructed, color='C1')
-
-# saving the plots
-print('Saving the plots ...\n')
-fig2.savefig(f'{savedir}test_profiles.png', bbox_inches='tight')
-plt.close(fig2)
-'''
