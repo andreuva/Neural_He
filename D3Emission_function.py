@@ -9,11 +9,12 @@ class D3inference:
     Class to do the inference of the emision of the D3 line
     """
 
-    def __init__(self, file_checkpoint_I, file_checkpoint_Q, file_checkpoint_U):
+    def __init__(self, file_checkpoint_I, file_checkpoint_Q, file_checkpoint_U, file_checkpoint_V):
         """
         file_checkpoint_I: path to the checkpoint of the model for the Stokes I
         file_checkpoint_Q: path to the checkpoint of the model for the Stokes Q
         file_checkpoint_U: path to the checkpoint of the model for the Stokes U
+        file_checkpoint_V: path to the checkpoint of the model for the Stokes V
         """
 
         # check if the GPU is available
@@ -44,6 +45,20 @@ class D3inference:
         self.model_U = MLP(7, 1, self.checkpoint_U['hyperparameters']['mlp_hidden_size']).to(self.device)
         self.model_U.load_state_dict(self.checkpoint_U['state_dict'])
 
+        self.checkpoint_V = torch.load(file_checkpoint_V, map_location=lambda storage, loc: storage)
+        self.model_V = MLP(7, 1, self.checkpoint_V['hyperparameters']['mlp_hidden_size']).to(self.device)
+        self.model_V.load_state_dict(self.checkpoint_V['state_dict'])
+
+        self.params_norm_coeffs = np.loadtxt('params_norm_coeffs.txt')
+        self.params_min = self.params_norm_coeffs[0,:]
+        self.params_max = self.params_norm_coeffs[1,:]
+        self.params_mean = self.params_norm_coeffs[2,:]
+
+        self.prof_norm_coeffs = np.loadtxt('prof_norm_coeffs.txt')
+        self.eps_I_max = self.prof_norm_coeffs[0]
+        self.eps_I_min = self.prof_norm_coeffs[1]
+        self.eps_I_mean = self.prof_norm_coeffs[2]
+
     def __call__(self, b, x, Bx, By, Bz):
         """
         call to do the inference of the integrated emission of the D3 line
@@ -69,37 +84,41 @@ class D3inference:
         mu = x/h
 
         # construct the parameters list with the normalization
-        params = np.array([B_mod, B_inc, B_az, x, b, h, mu], dtype=np.float32)
-        params_min = np.array(
-                     [5.02408413e-04,  5.16185230e-03,  4.31011672e-03, -1.39139561e+12,
-                      1.77925802e+06,  3.02479808e+09, -1.00000000e+00], dtype=np.float32)
-        params_max = np.array(
-                     [2.41667130e+02, 1.79999725e+02, 3.59996481e+02, 1.39139222e+12,
-                      6.95696304e+11, 1.55437942e+12, 1.00000000e+00], dtype=np.float32)
+        params = np.array([B_mod, B_inc, B_az, x, b, h, mu])
 
-        params_norm = (params - params_min)/(params_max - params_min)
+        params_norm = (params - self.params_mean)/(self.params_max - self.params_min)
+        params_norm = params_norm.astype('float32')
 
         epsI = self.model_I.forward(torch.tensor(params_norm).to(self.device))
         epsQ = self.model_Q.forward(torch.tensor(params_norm).to(self.device))
         epsU = self.model_U.forward(torch.tensor(params_norm).to(self.device))
+        epsV = self.model_V.forward(torch.tensor(params_norm).to(self.device))
 
         epsI = epsI.detach().cpu().numpy()
         epsQ = epsQ.detach().cpu().numpy()
         epsU = epsU.detach().cpu().numpy()
+        epsV = epsV.detach().cpu().numpy()
 
-        return epsI, epsQ, epsU
+        epsI = epsI*(self.eps_I_max - self.eps_I_min) + self.eps_I_mean
+        epsI = 10**(epsI)
+        epsQ = epsQ*epsI
+        epsU = epsU*epsI
+        epsV = epsV*epsI
+
+        return epsI, epsQ, epsU, epsV
 
 
 
 if __name__ == "__main__":
     # intanciate the class to do the predictions
-    file_checkpoint_I = 'checkpoints/trained_model_mlp_eps_Q_time_20230109-140242/trained_model_mlp_20230109-160317.pth'
-    file_checkpoint_Q = 'checkpoints/trained_model_mlp_eps_Q_time_20230109-140242/trained_model_mlp_20230109-160317.pth'
-    file_checkpoint_U = 'checkpoints/trained_model_mlp_eps_Q_time_20230109-140242/trained_model_mlp_20230109-160317.pth'
+    file_checkpoint_I = '../../Desktop/weigths_eps_I.pth'
+    file_checkpoint_Q = '../../Desktop/weigths_eps_Q.pth'
+    file_checkpoint_U = '../../Desktop/weigths_eps_U.pth'
+    file_checkpoint_V = '../../Desktop/weigths_eps_V.pth'
 
-    D3 = D3inference(file_checkpoint_I, file_checkpoint_Q, file_checkpoint_U)
+    D3 = D3inference(file_checkpoint_I, file_checkpoint_Q, file_checkpoint_U, file_checkpoint_V)
 
     R_sun = 6.957e10           # solar radius [cm]
-    epsI, epsQ, epsU = D3(0*R_sun, 5*R_sun, 10, 0, 0)
+    epsI, epsQ, epsU, epsV = D3(0*R_sun, 5*R_sun, 10, 0, 0)
 
-    print(epsI, epsQ, epsU)
+    print(epsI, epsQ, epsU, epsV)

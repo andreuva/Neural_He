@@ -19,10 +19,10 @@ else:
     print('Using CPU')
     print(device)
 
-run_loaded = f'checkpoints/trained_model_D3_mlp_eps_Q_time_20230207-162026'
-run_loaded = f'checkpoints/trained_model_D3_mlp_eps_U_time_20230207-162048'
-run_loaded = f'checkpoints/trained_model_D3_mlp_eps_V_time_20230207-162117'
-# run_loaded = f'checkpoints/trained_model_D3_mlp_eps_I_time_20230207-161932'
+run_loaded = f'checkpoints/trained_model_D3_mlp_eps_Q_time_20230208-144822'
+run_loaded = f'checkpoints/trained_model_D3_mlp_eps_U_time_20230208-144752'
+run_loaded = f'checkpoints/trained_model_D3_mlp_eps_V_time_20230208-144840'
+run_loaded = f'checkpoints/trained_model_D3_mlp_eps_I_time_20230208-144723'
 
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
@@ -39,11 +39,6 @@ savedir = run_loaded + '/'
 print('Reading data from: ', readir + readfile)
 # create the dataset to test
 test_dataset = profiles_dataset(f'{readir}{readfile}', train=False)
-
-print('Reading normalization parameters from: ', readir + 'profile_normalization_coefficients_D3_eps_I.pkl')
-# load the normalization parameters
-with open(f'{readir}profile_normalization_coefficients_D3_eps_I.pkl', 'rb') as f:
-    norm_coeffs = pkl.load(f)
 
 if archiquecture == 'cnn':
     model = CNN(test_dataset.n_features,  test_dataset.n_components,
@@ -81,18 +76,25 @@ error_perc = analisis[:,2]/analisis[:,0]*100
 
 # plot a histogram of the relative error within the reconstructed sample
 # mark the 1, 5 and 10 percentiles with vertical lines
-plt.hist(error_perc, bins=500)
-plt.axvline(np.percentile(error_perc, 90), color='green')
-plt.axvline(np.percentile(error_perc, 95), color='yellow')
-plt.axvline(np.percentile(error_perc, 99), color='red')
+plt.hist(error_perc, bins=500, range=(0, 20))
+plt.axvline(np.percentile(error_perc, 90), color='green', label=f'90% --> {np.percentile(error_perc, 90): .2f}')
+plt.axvline(np.percentile(error_perc, 95), color='yellow', label=f'95% --> {np.percentile(error_perc, 95): .2f}')
+plt.axvline(np.percentile(error_perc, 99), color='red', label=f'99% --> {np.percentile(error_perc, 99): .2f}')
 plt.xlabel('Relative error (%)')
 plt.ylabel('Number of samples')
-plt.title(f'Relative error histogram for the reconstructed sample')
-plt.show()
+plt.title(f'Relative error histogram for the reconstructed {coefficient}')
+plt.legend()
+plt.xlim(0, 20)
+plt.savefig(f'{savedir}relative_error_histogram_{coefficient}.png')
+# plt.show()
+plt.close()
 
 # plot the predicted output and the ground truth
 plt.plot(analisis[:,0], analisis[:,1], '.', alpha=0.1)
 plt.plot([analisis[:,:1].min(), analisis[:,:1].max()], [analisis[:,:1].min(), analisis[:,:1].max()], 'k--')
 plt.xlabel('True')
 plt.ylabel('Predicted')
-plt.show()
+plt.title(f'{coefficient}')
+plt.savefig(f'{savedir}predicted_vs_true_{coefficient}.png')
+# plt.show()
+plt.close()

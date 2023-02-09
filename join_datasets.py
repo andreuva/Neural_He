@@ -87,18 +87,18 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
     data_join['profiles'] = profiles_normaliced
 
     # make a mask to remove the outliers (5 and 95 percentile)
-    # print('Removing outliers...')
-    # mask = (profiles_normaliced > np.percentile(profiles_normaliced, 5)) * (profiles_normaliced < np.percentile(profiles_normaliced, 95))
-    # profiles_normaliced_in = profiles_normaliced[mask]
-    # profiles_normaliced_out = profiles_normaliced[~mask]
+    print('Removing outliers...')
+    mask = (profiles_normaliced > np.percentile(profiles_normaliced, 5)) * (profiles_normaliced < np.percentile(profiles_normaliced, 95))
+    profiles_normaliced_in = profiles_normaliced[mask]
+    profiles_normaliced_out = profiles_normaliced[~mask]
 
     # histogram of the integrated D3 profiles
-    # print('Plotting histograms...')
+    print('Plotting histograms...')
     # complete histogram
-    # plt.hist(profiles_normaliced_in, bins=2000, alpha=0.5)
-    # plt.hist(profiles_normaliced_out, bins=2000, alpha=0.5)
-    # plt.title(coefficient)
-    # plt.show()
+    plt.hist(profiles_normaliced_in, bins=2000, alpha=0.5)
+    plt.hist(profiles_normaliced_out, bins=2000, alpha=0.5)
+    plt.title(coefficient)
+    plt.show()
 
     with open(f'{root_dir}model_ready_D3_{coefficient}_normaliced.pkl', 'wb') as f:
         pkl.dump(data_join, f)
