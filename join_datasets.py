@@ -38,8 +38,7 @@ for component in components:
         data_join['profiles'] = np.concatenate([data[i]['profiles'] for i in range(len(data))])
         data_join['nus'] = data[0]['nus']
 
-        [print(f'Lengths of "{key}":\n', [data[i][key].shape for i in range(len(data))], f'\n joint={data_join[key].shape}') for key in data[0].keys()]
-        [print(f'Shapes of "{key}":\n',  [data[i][key].shape for i in range(len(data))], f'\n joint={data_join[key].shape}') for key in data[0].keys()]
+        [print(f'Lengths of "{key}":\n', [data[i][key].shape for i in range(len(data))], f'\n joint={data_join[key].shape}\n') for key in data[0].keys()]
         print('-'*80 +'\n')
 
         params = data_join['params']
@@ -78,7 +77,9 @@ for component in components:
         with open(f'{base_folder}/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
             pkl.dump(data_join, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        print(f'Cleaning {coefficient}...\n')
+        print(f'Cleaning {coefficient}...')
         del data, data_join, params, params_minmax, params_normaliced, Jr, Jb
+        print('-'*80 +'\n')
+        print('-'*80 +'\n')
 
 print('Done!')
