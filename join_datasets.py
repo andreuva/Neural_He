@@ -3,8 +3,8 @@ import glob
 import numpy as np
 import os
 
-sufix_database = '10M'
-sufix_dataset = '10M'
+sufix_database = 'twocomp'
+sufix_dataset = 'twocomp'
 print('Loading data...')
 components = [['eps_It', 'eps_Qt', 'eps_Ut', 'eps_Vt', 'eta_It', 'eta_Qt', 'eta_Ut', 'eta_Vt', 'rho_Qt', 'rho_Ut', 'rho_Vt'],
               ['eps_Ir', 'eps_Qr', 'eps_Ur', 'eps_Vr', 'eta_Ir', 'eta_Qr', 'eta_Ur', 'eta_Vr', 'rho_Qr', 'rho_Ur', 'rho_Vr'],
@@ -58,10 +58,14 @@ for component in components:
         data_join['params'] = params_normaliced
 
         if '_I' in coefficient:
-            data_join['profiles'] = data_join['profiles']/1e-9
             normalization = data_join['profiles'].copy()
             normalization_coefficient = coefficient
             print(f'update normalization with {coefficient}')
+            if 'eps_I' in coefficient:
+                data_join['profiles'] = data_join['profiles']/1e-13
+            else:
+                data_join['profiles'] = data_join['profiles']/1e-9
+                exit()
         else:
             data_join['profiles'] = data_join['profiles']/normalization
             print(f'normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
