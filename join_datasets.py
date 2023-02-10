@@ -34,12 +34,11 @@ for component in components:
         data_join['profiles'] = np.concatenate([data[i]['profiles'] for i in range(len(data))])
         data_join['nus'] = data[0]['nus']
 
-        [print(f'Length of datasets for key "{key}":', [data[i][key].shape for i in range(len(data))],
-            f' joint={data_join[key].shape}') for key in data[0].keys()]
-        [print(f'Shape of each sample for key "{key}":',[data[i][key].shape for i in range(len(data))],
-            f' joint={data_join[key].shape}') for key in data[0].keys()]
+        [print(f'Lengths of "{key}":\n', [data[i][key].shape for i in range(len(data))], f'\n joint={data_join[key].shape}') for key in data[0].keys()]
+        [print(f'Shapes of "{key}":\n',  [data[i][key].shape for i in range(len(data))], f'\n joint={data_join[key].shape}') for key in data[0].keys()]
 
         params = data_join['params']
+        print('Normalizing parameters...')
         params_minmax = (params - params.min(axis=0))/(params.max(axis=0) - params.min(axis=0))
         Jr, Jb = params[:,7:16], params[:,16:]
 
@@ -57,23 +56,24 @@ for component in components:
         params_normaliced[:,16:] = Jb.copy()
         data_join['params'] = params_normaliced
 
+        print('Nomalizing profiles...')
         if '_I' in coefficient:
             normalization = data_join['profiles'].copy()
             normalization_coefficient = coefficient
-            print(f'update normalization with {coefficient}')
+            print(f'Update normalization with {coefficient}')
             if 'eps_I' in coefficient:
                 data_join['profiles'] = data_join['profiles']/1e-13
             else:
                 data_join['profiles'] = data_join['profiles']/1e-9
-                exit()
         else:
             data_join['profiles'] = data_join['profiles']/normalization
-            print(f'normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
+            print(f'Normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
 
-
+        print(f'Saving {coefficient}...')
         with open(f'{base_folder}/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
             pkl.dump(data_join, f, protocol=pkl.HIGHEST_PROTOCOL)
 
+        print(f'Cleaning {coefficient}...')
         del data, data_join, params, params_minmax, params_normaliced, Jr, Jb
 
 print('Done!')
