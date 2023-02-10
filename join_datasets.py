@@ -69,7 +69,7 @@ for component in components:
             if 'eps_I' in coefficient:
                 data_join['profiles'] = data_join['profiles']/1e-13
             else:
-                data_join['profiles'] = data_join['profiles']/1e-9
+                data_join['profiles'] = data_join['profiles']/1e-11
         else:
             data_join['profiles'] = data_join['profiles']/normalization
             print(f'Normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
