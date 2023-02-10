@@ -29,6 +29,10 @@ for component in components:
                 print(f'Error loading data from {folder}')
                 continue
 
+        print('-'*80+'\n')
+        print(f'Joining data from {len(data)} folders...')
+        print('-'*80 +'\n')
+
         data_join = {}
         data_join['params'] = np.concatenate([data[i]['params'] for i in range(len(data))])
         data_join['profiles'] = np.concatenate([data[i]['profiles'] for i in range(len(data))])
@@ -36,6 +40,7 @@ for component in components:
 
         [print(f'Lengths of "{key}":\n', [data[i][key].shape for i in range(len(data))], f'\n joint={data_join[key].shape}') for key in data[0].keys()]
         [print(f'Shapes of "{key}":\n',  [data[i][key].shape for i in range(len(data))], f'\n joint={data_join[key].shape}') for key in data[0].keys()]
+        print('-'*80 +'\n')
 
         params = data_join['params']
         print('Normalizing parameters...')
@@ -73,7 +78,7 @@ for component in components:
         with open(f'{base_folder}/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
             pkl.dump(data_join, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        print(f'Cleaning {coefficient}...')
+        print(f'Cleaning {coefficient}...\n')
         del data, data_join, params, params_minmax, params_normaliced, Jr, Jb
 
 print('Done!')
