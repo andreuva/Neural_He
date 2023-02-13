@@ -11,6 +11,8 @@ components = [['eps_It', 'eps_Qt', 'eps_Ut', 'eps_Vt', 'eta_It', 'eta_Qt', 'eta_
               ['eps_Ir', 'eps_Qr', 'eps_Ur', 'eps_Vr', 'eta_Ir', 'eta_Qr', 'eta_Ur', 'eta_Vr', 'rho_Qr', 'rho_Ur', 'rho_Vr'],
               ['eps_Ib', 'eps_Qb', 'eps_Ub', 'eps_Vb', 'eta_Ib', 'eta_Qb', 'eta_Ub', 'eta_Vb', 'rho_Qb', 'rho_Ub', 'rho_Vb']]
 
+components = [['eta_It', 'eta_Qt'], ['eta_Ir', 'eta_Qr'], ['eta_Ib', 'eta_Qb']]
+
 for component in components:
     for coefficient in component:
         data = []
