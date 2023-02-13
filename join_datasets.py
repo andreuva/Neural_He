@@ -15,7 +15,7 @@ for component in components:
     for coefficient in component:
         data = []
         base_folder = '../data/neural_he/spectra'
-        folders = sorted(glob.glob(f'{base_folder}/data_{sufix_database}*'))
+        folders = sorted(glob.glob(f'{base_folder}/data_{sufix_database}*'))[:1]
 
         for folder in folders:
             # if the folder is not actually a folder (is a file) move to the next
@@ -67,22 +67,23 @@ for component in components:
             normalization_coefficient = coefficient
             print(f'Update normalization with {coefficient}')
             if 'eps_I' in coefficient:
-                data_join['profiles'] = data_join['profiles']/1e-13
+                data_join['profiles'] = data_join['profiles']/1e-12
             else:
                 data_join['profiles'] = data_join['profiles']/1e-11
         else:
             data_join['profiles'] = data_join['profiles']/normalization
             data_join[normalization_coefficient] = normalization
             print(f'Normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
-        
+
         # plot the mean and std of the profiles to check how they are distributed
         print('Plotting mean and std of profiles...')
         std = data_join['profiles'].std(axis=0)
         mean = data_join['profiles'].mean(axis=0)
-        plt.plot(data_join['nus'], data_join['profiles'].mean(axis=0), color = 'blue')
+        plt.plot(data_join['nus'], mean, color = 'blue')
         plt.fill_between(data_join['nus'], mean-std, mean+std, color = 'blue', alpha=0.5)
         plt.title(f'Mean of {coefficient}')
         plt.savefig(f'{base_folder}/mean_{coefficient}_{sufix_dataset}.png')
+        plt.close()
 
         print(f'Saving {coefficient}...')
         with open(f'{base_folder}/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
