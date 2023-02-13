@@ -2,6 +2,7 @@ import pickle as pkl
 import glob
 import numpy as np
 import os
+import matplotlib.pyplot as plt
 
 sufix_database = 'twocomp'
 sufix_dataset = 'twocomp'
@@ -73,6 +74,14 @@ for component in components:
             data_join['profiles'] = data_join['profiles']/normalization
             data_join[normalization_coefficient] = normalization
             print(f'Normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
+        
+        # plot the mean and std of the profiles to check how they are distributed
+        plt.plot(data_join['nus'], data_join['profiles'].mean(axis=1), color = 'blue')
+        plt.fill_between(data_join['nus'], data_join['profiles'].mean(axis=1) - data_join['profiles'].std(axis=1),
+                                           data_join['profiles'].mean(axis=1) + data_join['profiles'].std(axis=1),
+                                           color = 'blue' ,alpha=0.5)
+        plt.title(f'Mean of {coefficient}')
+        plt.savefig(f'{base_folder}/mean_{coefficient}_{sufix_dataset}.png')
 
         print(f'Saving {coefficient}...')
         with open(f'{base_folder}/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
