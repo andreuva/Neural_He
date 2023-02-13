@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 sufix_database = 'twocomp'
 sufix_dataset = 'twocomp'
 print('Loading data...')
-components = [['eps_It', 'eps_Qt', 'eps_Ut', 'eps_Vt', 'eta_It', 'eta_Qt', 'eta_Ut', 'eta_Vt', 'rho_Qt', 'rho_Ut', 'rho_Vt'],
-              ['eps_Ir', 'eps_Qr', 'eps_Ur', 'eps_Vr', 'eta_Ir', 'eta_Qr', 'eta_Ur', 'eta_Vr', 'rho_Qr', 'rho_Ur', 'rho_Vr'],
-              ['eps_Ib', 'eps_Qb', 'eps_Ub', 'eps_Vb', 'eta_Ib', 'eta_Qb', 'eta_Ub', 'eta_Vb', 'rho_Qb', 'rho_Ub', 'rho_Vb']]
+components = [['eta_It', 'eps_It', 'eps_Qt', 'eps_Ut', 'eps_Vt', 'eta_Qt', 'eta_Ut', 'eta_Vt', 'rho_Qt', 'rho_Ut', 'rho_Vt'],
+              ['eta_Ir', 'eps_Ir', 'eps_Qr', 'eps_Ur', 'eps_Vr', 'eta_Qr', 'eta_Ur', 'eta_Vr', 'rho_Qr', 'rho_Ur', 'rho_Vr'],
+              ['eta_Ib', 'eps_Ib', 'eps_Qb', 'eps_Ub', 'eps_Vb', 'eta_Qb', 'eta_Ub', 'eta_Vb', 'rho_Qb', 'rho_Ub', 'rho_Vb']]
 
 components = [['eta_It', 'eta_Qt'], ['eta_Ir', 'eta_Qr'], ['eta_Ib', 'eta_Qb']]
 
@@ -64,29 +64,25 @@ for component in components:
         data_join['params'] = params_normaliced
 
         print('Nomalizing profiles...')
-        if '_I' in coefficient:
+        if 'eta_I' in coefficient:
+            data_join['profiles'] = data_join['profiles']/1e-9
             normalization = data_join['profiles'].copy()
             normalization_coefficient = coefficient
             print(f'Update normalization with {coefficient}')
-            if 'eps_I' in coefficient:
-                data_join['profiles'] = data_join['profiles']/1e-12
-            else:
-                data_join['profiles'] = data_join['profiles']/1e-9
         else:
             # normalize avoiding the 0 values
-            data_join['profiles'] = data_join['profiles'] #/(normalization + 1e-200)
+            data_join['profiles'] = data_join['profiles']/(normalization + 1e-200)
             data_join[normalization_coefficient] = normalization
             print(f'Normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
 
         # plot a sample of 10x10 profiles to check how they look
         print('Plotting a sample of 100 profiles...')
         sample = np.random.randint(0, data_join['profiles'].shape[0], 100)
-        plt.figure(figsize=(50,50), dpi=300)
+        plt.figure(figsize=(35,35), dpi=200)
         # make a 10x10 grid of plots with random profiles
         for i in range(10):
             for j in range(10):
                 plt.subplot(10,10,i*10+j+1)
-                plt.plot(data_join['nus'], data_join['profiles'][sample[i*10+j]]/normalization[sample[i*10+j]], color = 'orange')
                 plt.plot(data_join['nus'], data_join['profiles'][sample[i*10+j]], color = 'blue')
         plt.title(f'Sample of {coefficient}')
         plt.savefig(f'{base_folder}/sample_{coefficient}_{sufix_dataset}.png')
