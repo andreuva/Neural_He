@@ -85,9 +85,9 @@ for component in components:
         plt.savefig(f'{base_folder}/mean_{coefficient}_{sufix_dataset}.png')
         plt.close()
 
-        print(f'Saving {coefficient}...')
-        with open(f'{base_folder}/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
-            pkl.dump(data_join, f, protocol=pkl.HIGHEST_PROTOCOL)
+        # print(f'Saving {coefficient}...')
+        # with open(f'{base_folder}/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
+        #     pkl.dump(data_join, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         print(f'Cleaning {coefficient}...')
         del data, data_join, params, params_minmax, params_normaliced, Jr, Jb, std, mean
