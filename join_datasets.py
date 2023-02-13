@@ -84,6 +84,7 @@ for component in components:
         mean = data_join['profiles'].mean(axis=0)
         plt.plot(data_join['nus'], mean, color = 'blue')
         plt.fill_between(data_join['nus'], mean-std, mean+std, color = 'blue', alpha=0.5)
+        plt.yscale('log')
         plt.title(f'Mean of {coefficient}')
         plt.savefig(f'{base_folder}/mean_{coefficient}_{sufix_dataset}.png')
         plt.close()
