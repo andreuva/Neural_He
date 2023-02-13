@@ -78,16 +78,26 @@ for component in components:
             data_join[normalization_coefficient] = normalization
             print(f'Normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
 
-        # plot the mean and std of the profiles to check how they are distributed
-        print('Plotting mean and std of profiles...')
-        std = data_join['profiles'].std(axis=0)
-        mean = data_join['profiles'].mean(axis=0)
-        plt.plot(data_join['nus'], mean, color = 'blue')
+        # plot a sample of 10x10 profiles to check how they look
+        print('Plotting a sample of 100 profiles...')
+        plt.figure(figsize=(20,20), dpi=300)
+        # make a 10x10 grid of plots with random profiles
+        for i in range(10):
+            for j in range(10):
+                plt.subplot(10,10,i*10+j+1)
+                plt.plot(data_join['nus'], data_join['profiles'][np.random.randint(0, data_join['profiles'].shape[0])])
+        plt.title(f'Sample of {coefficient}')
+        plt.savefig(f'{base_folder}/sample_{coefficient}_{sufix_dataset}.png')
+        plt.close()
+        
+        # mean = np.mean(data_join['profiles'], axis=0)
+        # std = np.std(data_join['profiles'], axis=0)
+        # plt.plot(data_join['nus'], mean, color = 'blue')
         # plt.fill_between(data_join['nus'], mean-std, mean+std, color = 'blue', alpha=0.5)
         # plt.yscale('log')
-        plt.title(f'Mean of {coefficient}')
-        plt.savefig(f'{base_folder}/mean_{coefficient}_{sufix_dataset}.png')
-        plt.close()
+        # plt.title(f'Mean of {coefficient}')
+        # plt.savefig(f'{base_folder}/mean_{coefficient}_{sufix_dataset}.png')
+        # plt.close()
 
         # print(f'Saving {coefficient}...')
         # with open(f'{base_folder}/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
