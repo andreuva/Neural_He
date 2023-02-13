@@ -76,10 +76,11 @@ for component in components:
             print(f'Normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
         
         # plot the mean and std of the profiles to check how they are distributed
-        plt.plot(data_join['nus'], data_join['profiles'].mean(axis=1), color = 'blue')
-        plt.fill_between(data_join['nus'], data_join['profiles'].mean(axis=1) - data_join['profiles'].std(axis=1),
-                                           data_join['profiles'].mean(axis=1) + data_join['profiles'].std(axis=1),
-                                           color = 'blue' ,alpha=0.5)
+        print('Plotting mean and std of profiles...')
+        std = data_join['profiles'].std(axis=0)
+        mean = data_join['profiles'].mean(axis=0)
+        plt.plot(data_join['nus'], data_join['profiles'].mean(axis=0), color = 'blue')
+        plt.fill_between(data_join['nus'], mean-std, mean+std, color = 'blue', alpha=0.5)
         plt.title(f'Mean of {coefficient}')
         plt.savefig(f'{base_folder}/mean_{coefficient}_{sufix_dataset}.png')
 
@@ -88,7 +89,7 @@ for component in components:
             pkl.dump(data_join, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         print(f'Cleaning {coefficient}...')
-        del data, data_join, params, params_minmax, params_normaliced, Jr, Jb
+        del data, data_join, params, params_minmax, params_normaliced, Jr, Jb, std, mean
         print('-'*80 +'\n')
         print('-'*80 +'\n')
 
