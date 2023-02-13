@@ -71,7 +71,7 @@ for component in components:
             print(f'Update normalization with {coefficient}')
         else:
             # normalize avoiding the 0 values
-            data_join['profiles'] = data_join['profiles']/(normalization + 1e-200)
+            data_join['profiles'] = data_join['profiles']
             data_join[normalization_coefficient] = normalization
             print(f'Normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
 
