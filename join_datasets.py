@@ -81,11 +81,12 @@ for component in components:
         # plot a sample of 10x10 profiles to check how they look
         print('Plotting a sample of 100 profiles...')
         sample = np.random.randint(0, data_join['profiles'].shape[0], 100)
-        plt.figure(figsize=(20,20), dpi=300)
+        plt.figure(figsize=(50,50), dpi=300)
         # make a 10x10 grid of plots with random profiles
         for i in range(10):
             for j in range(10):
                 plt.subplot(10,10,i*10+j+1)
+                plt.plot(data_join['nus'], data_join['profiles'][sample[i*10+j]]/normalization[sample[i*10+j]], color = 'orange')
                 plt.plot(data_join['nus'], data_join['profiles'][sample[i*10+j]], color = 'blue')
         plt.title(f'Sample of {coefficient}')
         plt.savefig(f'{base_folder}/sample_{coefficient}_{sufix_dataset}.png')
