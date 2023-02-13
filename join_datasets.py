@@ -74,7 +74,7 @@ for component in components:
                 data_join['profiles'] = data_join['profiles']/1e-9
         else:
             # normalize avoiding the 0 values
-            data_join['profiles'] = data_join['profiles']/(normalization + 1e-10) * 1e7
+            data_join['profiles'] = data_join['profiles']/(normalization + 1e-200)
             data_join[normalization_coefficient] = normalization
             print(f'Normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
 
@@ -83,8 +83,8 @@ for component in components:
         std = data_join['profiles'].std(axis=0)
         mean = data_join['profiles'].mean(axis=0)
         plt.plot(data_join['nus'], mean, color = 'blue')
-        plt.fill_between(data_join['nus'], mean-std, mean+std, color = 'blue', alpha=0.5)
-        plt.yscale('log')
+        # plt.fill_between(data_join['nus'], mean-std, mean+std, color = 'blue', alpha=0.5)
+        # plt.yscale('log')
         plt.title(f'Mean of {coefficient}')
         plt.savefig(f'{base_folder}/mean_{coefficient}_{sufix_dataset}.png')
         plt.close()
