@@ -81,6 +81,7 @@ if __name__ == "__main__":
             plt.suptitle(f'Sample of {coefficient}')
             plt.savefig(f'{basedir}prepared_sample_{coefficient}_{folder[-6:-1]}.png')
             # plt.show()
+            plt.close()
             # else:
             #     component = np.array([profiles[i][coefficient]/profiles[i]['eta_I'+coefficient[-1]] for i in range(len(profiles))])
             #     print(f'Normalizing {coefficient} by eta_I{coefficient[-1]}')
