@@ -35,7 +35,7 @@ if __name__ == "__main__":
     # load the data from the file
     sufix = 'test_components'
     basedir = '../data/neural_he/spectra/'
-    folders = sorted(glob.glob(f'{basedir}data_{sufix}*'))[:1]
+    folders = sorted(glob.glob(f'{basedir}data_{sufix}*'))
     for folder in folders:
         # if the folder is not actually a folder (is a file) move to the next
         if not os.path.isdir(folder):

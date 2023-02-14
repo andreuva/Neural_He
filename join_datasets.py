@@ -17,7 +17,7 @@ for component in components:
     for coefficient in component:
         data = []
         base_folder = '../data/neural_he/spectra'
-        folders = sorted(glob.glob(f'{base_folder}/data_{sufix_database}*'))[:1]
+        folders = sorted(glob.glob(f'{base_folder}/data_{sufix_database}*'))
 
         for folder in folders:
             # if the folder is not actually a folder (is a file) move to the next
