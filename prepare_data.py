@@ -67,11 +67,11 @@ if __name__ == "__main__":
                       'eps_Ib', 'eps_Qb', 'eps_Ub', 'eps_Vb', 'eta_Ib', 'eta_Qb', 'eta_Ub', 'eta_Vb', 'rho_Qb', 'rho_Ub', 'rho_Vb']
         for coefficient in components:
             # extract the frequencies and the profile in eta_I (first profile)
-            if 'eta_I' in coefficient:
-                component = np.array([profiles[i][coefficient] for i in range(len(profiles))])
-            else:
-                component = np.array([profiles[i][coefficient]/profiles[i]['eta_I'+coefficient[-1]] for i in range(len(profiles))])
-                print(f'Normalizing {coefficient} by eta_I{coefficient[-1]}')
+            # if 'eta_I' in coefficient:
+            component = np.array([profiles[i][coefficient] for i in range(len(profiles))])
+            # else:
+            #     component = np.array([profiles[i][coefficient]/profiles[i]['eta_I'+coefficient[-1]] for i in range(len(profiles))])
+            #     print(f'Normalizing {coefficient} by eta_I{coefficient[-1]}')
             # create a dictionary with the coefficients of the different models
             # and the instensities that are associated to each model
             models_dict = { 'profiles' : component, 'nus' : nus, 'params' : params,}
