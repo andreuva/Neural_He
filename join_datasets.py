@@ -72,13 +72,13 @@ for component in components:
         else:
             # normalize avoiding the 0 values
             data_join['profiles'] = data_join['profiles']
-            data_join[normalization_coefficient] = normalization
-            print(f'Normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
+            # data_join[normalization_coefficient] = normalization
+            # print(f'Normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
 
         # plot a sample of 10x10 profiles to check how they look
         print('Plotting a sample of 100 profiles...')
         sample = np.random.randint(0, data_join['profiles'].shape[0], 100)
-        plt.figure(figsize=(35,35), dpi=200)
+        plt.figure(figsize=(20,20), dpi=200)
         # make a 10x10 grid of plots with random profiles
         for i in range(10):
             for j in range(10):
