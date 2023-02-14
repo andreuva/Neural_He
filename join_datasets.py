@@ -4,8 +4,8 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-sufix_database = 'twocomp'
-sufix_dataset = 'twocomp'
+sufix_database = 'two_norm'
+sufix_dataset = 'two_norm'
 print('Loading data...')
 components = [['eta_It', 'eps_It', 'eps_Qt', 'eps_Ut', 'eps_Vt', 'eta_Qt', 'eta_Ut', 'eta_Vt', 'rho_Qt', 'rho_Ut', 'rho_Vt'],
               ['eta_Ir', 'eps_Ir', 'eps_Qr', 'eps_Ur', 'eps_Vr', 'eta_Qr', 'eta_Ur', 'eta_Vr', 'rho_Qr', 'rho_Ur', 'rho_Vr'],
@@ -88,20 +88,20 @@ for component in components:
         plt.savefig(f'{base_folder}/sample_{coefficient}_{sufix_dataset}.png')
         plt.close()
 
-        # print('Plotting mean of profiles...')
-        # mean = np.mean(data_join['profiles'], axis=0)
-        # std = np.std(data_join['profiles'], axis=0)
-        # plt.plot(data_join['nus'], mean, color = 'blue')
-        # plt.fill_between(data_join['nus'], mean-std, mean+std, color = 'blue', alpha=0.5)
-        # plt.yscale('log')
-        # plt.title(f'Mean of {coefficient}')
-        # plt.savefig(f'{base_folder}/mean_{coefficient}_{sufix_dataset}.png')
-        # plt.close()
-        # del mean, std
+        print('Plotting mean of profiles...')
+        mean = np.mean(data_join['profiles'], axis=0)
+        std = np.std(data_join['profiles'], axis=0)
+        plt.plot(data_join['nus'], mean, color = 'blue')
+        plt.fill_between(data_join['nus'], mean-std, mean+std, color = 'blue', alpha=0.5)
+        plt.yscale('log')
+        plt.title(f'Mean of {coefficient}')
+        plt.savefig(f'{base_folder}/mean_{coefficient}_{sufix_dataset}.png')
+        plt.close()
+        del mean, std
 
-        # print(f'Saving {coefficient}...')
-        # with open(f'{base_folder}/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
-        #     pkl.dump(data_join, f, protocol=pkl.HIGHEST_PROTOCOL)
+        print(f'Saving {coefficient}...')
+        with open(f'{base_folder}/model_ready_{coefficient}_{sufix_dataset}.pkl', 'wb') as f:
+            pkl.dump(data_join, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         print(f'Cleaning {coefficient}...')
         del data, data_join, params, params_minmax, params_normaliced, Jr, Jb
