@@ -60,7 +60,7 @@ if __name__ == "__main__":
                 param['JKQb'][1][1].imag, param['JKQb'][2][1].imag, param['JKQb'][2][2].imag] # Radiation field
                 for param in parameters]
         params = np.array(params)
-        nus = profiles['nus']
+        nus = profiles[0]['nus']
 
         components = ['eps_It', 'eps_Qt', 'eps_Ut', 'eps_Vt', 'eta_It', 'eta_Qt', 'eta_Ut', 'eta_Vt', 'rho_Qt', 'rho_Ut', 'rho_Vt',
                       'eps_Ir', 'eps_Qr', 'eps_Ur', 'eps_Vr', 'eta_Ir', 'eta_Qr', 'eta_Ur', 'eta_Vr', 'rho_Qr', 'rho_Ur', 'rho_Vr',
