@@ -33,8 +33,9 @@ def plot_data(freq, profiles, color='b', show=False):
 
 if __name__ == "__main__":
     # load the data from the file
-    sufix = 'twocomp'
-    folders = sorted(glob.glob(f'../data/neural_he/spectra/data_{sufix}*'))
+    sufix = 'test_components'
+    basedir = '../data/neural_he/spectra/'
+    folders = sorted(glob.glob(f'{basedir}data_{sufix}*'))[:1]
     for folder in folders:
         # if the folder is not actually a folder (is a file) move to the next
         if not os.path.isdir(folder):
@@ -69,6 +70,17 @@ if __name__ == "__main__":
             # extract the frequencies and the profile in eta_I (first profile)
             # if 'eta_I' in coefficient:
             component = np.array([profiles[i][coefficient] for i in range(len(profiles))])
+            print('Plotting a sample of 100 profiles...')
+            sample = np.random.randint(0, component.shape[0], 100)
+            plt.figure(figsize=(20,20), dpi=200)
+            # make a 10x10 grid of plots with random profiles
+            for i in range(10):
+                for j in range(10):
+                    plt.subplot(10,10,i*10+j+1)
+                    plt.plot(nus, component[sample[i*10+j]], color = 'blue')
+            plt.suptitle(f'Sample of {coefficient}')
+            plt.savefig(f'{basedir}prepared_sample_{coefficient}_{folder[-6:-1]}.png')
+            # plt.show()
             # else:
             #     component = np.array([profiles[i][coefficient]/profiles[i]['eta_I'+coefficient[-1]] for i in range(len(profiles))])
             #     print(f'Normalizing {coefficient} by eta_I{coefficient[-1]}')
