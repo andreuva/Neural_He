@@ -70,7 +70,7 @@ for component in components:
             data_join['normalization'] = np.ones_like(normalization)
         else:
             # normalize by the max of the profiles
-            data_join['profiles'] = (data_join['profiles'].T/normalization).T
+            data_join['profiles'] = 10*(data_join['profiles'].T/normalization).T
             data_join['normalization'] = normalization
             print(f'Normalicing {coefficient} with {normalization_coefficient} max: {coefficient}/{normalization_coefficient}_max')
 
