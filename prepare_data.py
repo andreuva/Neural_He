@@ -33,7 +33,7 @@ def plot_data(freq, profiles, color='b', show=False):
 
 if __name__ == "__main__":
     # load the data from the file
-    sufix = 'test_components'
+    sufix = ''
     basedir = '../data/neural_he/spectra/'
     folders = sorted(glob.glob(f'{basedir}data_{sufix}*'))
     for folder in folders:
@@ -67,10 +67,11 @@ if __name__ == "__main__":
                       'eps_Ir', 'eps_Qr', 'eps_Ur', 'eps_Vr', 'eta_Ir', 'eta_Qr', 'eta_Ur', 'eta_Vr', 'rho_Qr', 'rho_Ur', 'rho_Vr',
                       'eps_Ib', 'eps_Qb', 'eps_Ub', 'eps_Vb', 'eta_Ib', 'eta_Qb', 'eta_Ub', 'eta_Vb', 'rho_Qb', 'rho_Ub', 'rho_Vb']
         for coefficient in components:
-            # extract the frequencies and the profile in eta_I (first profile)
-            # if 'eta_I' in coefficient:
+
             component = np.array([profiles[i][coefficient] for i in range(len(profiles))])
+
             print('Plotting a sample of 100 profiles...')
+            np.random.seed(69)
             sample = np.random.randint(0, component.shape[0], 100)
             plt.figure(figsize=(20,20), dpi=200)
             # make a 10x10 grid of plots with random profiles
@@ -82,9 +83,7 @@ if __name__ == "__main__":
             plt.savefig(f'{basedir}prepared_sample_{coefficient}_{folder[-6:-1]}.png')
             # plt.show()
             plt.close()
-            # else:
-            #     component = np.array([profiles[i][coefficient]/profiles[i]['eta_I'+coefficient[-1]] for i in range(len(profiles))])
-            #     print(f'Normalizing {coefficient} by eta_I{coefficient[-1]}')
+
             # create a dictionary with the coefficients of the different models
             # and the instensities that are associated to each model
             models_dict = { 'profiles' : component, 'nus' : nus, 'params' : params,}

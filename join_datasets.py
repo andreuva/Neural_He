@@ -4,14 +4,12 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-sufix_database = 'two_norm'
-sufix_dataset = 'two_norm'
+sufix_database = ''
+sufix_dataset = ''
 print('Loading data...')
 components = [['eta_It', 'eps_It', 'eps_Qt', 'eps_Ut', 'eps_Vt', 'eta_Qt', 'eta_Ut', 'eta_Vt', 'rho_Qt', 'rho_Ut', 'rho_Vt'],
               ['eta_Ir', 'eps_Ir', 'eps_Qr', 'eps_Ur', 'eps_Vr', 'eta_Qr', 'eta_Ur', 'eta_Vr', 'rho_Qr', 'rho_Ur', 'rho_Vr'],
               ['eta_Ib', 'eps_Ib', 'eps_Qb', 'eps_Ub', 'eps_Vb', 'eta_Qb', 'eta_Ub', 'eta_Vb', 'rho_Qb', 'rho_Ub', 'rho_Vb']]
-
-components = [['eta_It', 'eta_Qt'], ['eta_Ir', 'eta_Qr'], ['eta_Ib', 'eta_Qb']]
 
 for component in components:
     for coefficient in component:
@@ -65,18 +63,20 @@ for component in components:
 
         print('Nomalizing profiles...')
         if 'eta_I' in coefficient:
-            data_join['profiles'] = data_join['profiles']/1e-9
-            normalization = data_join['profiles'].copy()
+            normalization = data_join['profiles'].max(axis=1)
             normalization_coefficient = coefficient
-            print(f'Update normalization with {coefficient}')
+            print(f'Update normalization with {coefficient} max')
+            data_join['profiles'] = data_join['profiles']/1e-9
+            data_join['normalization'] = np.ones_like(normalization)
         else:
-            # normalize avoiding the 0 values
-            data_join['profiles'] = data_join['profiles']/normalization
-            data_join[normalization_coefficient] = normalization
-            print(f'Normalicing {coefficient} with {normalization_coefficient}: {coefficient}/{normalization_coefficient}')
+            # normalize by the max of the profiles
+            data_join['profiles'] = (data_join['profiles'].T/normalization).T
+            data_join['normalization'] = normalization
+            print(f'Normalicing {coefficient} with {normalization_coefficient} max: {coefficient}/{normalization_coefficient}_max')
 
         # plot a sample of 10x10 profiles to check how they look
         print('Plotting a sample of 100 profiles...')
+        np.random.seed(69)
         sample = np.random.randint(0, data_join['profiles'].shape[0], 100)
         plt.figure(figsize=(20,20), dpi=200)
         # make a 10x10 grid of plots with random profiles
