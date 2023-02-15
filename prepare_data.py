@@ -70,19 +70,18 @@ if __name__ == "__main__":
 
             component = np.array([profiles[i][coefficient] for i in range(len(profiles))])
 
-            print('Plotting a sample of 100 profiles...')
-            np.random.seed(69)
-            sample = np.random.randint(0, component.shape[0], 100)
-            plt.figure(figsize=(20,20), dpi=200)
+            # print('Plotting a sample of 100 profiles...')
+            # np.random.seed(69)
+            # sample = np.random.randint(0, component.shape[0], 100)
+            # plt.figure(figsize=(20,20), dpi=200)
             # make a 10x10 grid of plots with random profiles
-            for i in range(10):
-                for j in range(10):
-                    plt.subplot(10,10,i*10+j+1)
-                    plt.plot(nus, component[sample[i*10+j]], color = 'blue')
-            plt.suptitle(f'Sample of {coefficient}')
-            plt.savefig(f'{basedir}prepared_sample_{coefficient}_{folder[-6:-1]}.png')
-            # plt.show()
-            plt.close()
+            # for i in range(10):
+            #     for j in range(10):
+            #         plt.subplot(10,10,i*10+j+1)
+            #         plt.plot(nus, component[sample[i*10+j]], color = 'blue')
+            # plt.suptitle(f'Sample of {coefficient}')
+            # plt.savefig(f'{basedir}prepared_sample_{coefficient}_{folder[-6:-1]}.png')
+            # plt.close()
 
             # create a dictionary with the coefficients of the different models
             # and the instensities that are associated to each model
