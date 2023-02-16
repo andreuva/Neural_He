@@ -3,8 +3,8 @@ import glob
 import numpy as np
 import os
 
-sufix_database = '10M'
-sufix_dataset = '10M'
+sufix_database = ''
+sufix_dataset = ''
 print('Loading data...')
 coefficients = ['eps_It', 'eps_Qt', 'eps_Ut', 'eps_Vt', 'eta_It', 'eta_Qt', 'eta_Ut', 'eta_Vt', 'rho_Qt', 'rho_Ut', 'rho_Vt',
                 'eps_Ir', 'eps_Qr', 'eps_Ur', 'eps_Vr', 'eta_Ir', 'eta_Qr', 'eta_Ur', 'eta_Vr', 'rho_Qr', 'rho_Ur', 'rho_Vr',

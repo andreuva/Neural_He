@@ -1,9 +1,9 @@
 {
-    "coefficient" : "eta_Qr",
+    "coefficient" : "eta_Qt",
     "archiquecture" : "mlp",
 
     "params": {
-        "mlp" : {"mlp_hidden_size" : [36, 64, 128, 256, 512, 512, 1024, 512, 512]},
+        "mlp" : {"mlp_hidden_size" : [36, 64, 128, 256, 512, 1024, 2048, 1024, 512]},
         "cnn" : {
                 "mlp_hiden_in" : [64, 128, 256],
                 "cnn_hidden_size" : [32, 64, 128, 128, 64, 32],
@@ -14,12 +14,12 @@
 
     "gpu" : 0,
     "readir" : "../data/neural_he/spectra/",
-    "group_suffix" : "test_twocomp",
-    "dataset" : "testtwocomp",
+    "group_suffix" : "twocomp",
+    "dataset" : "twocomp",
 
     "batch_size" : 8192,
-    "epochs" : 2050,
-    "learning_rate" : 5e-4,
+    "epochs" : 2048,
+    "learning_rate" : 6e-4,
     "step_size_scheduler" : 150,
     "gamma_scheduler" : 0.90
 }

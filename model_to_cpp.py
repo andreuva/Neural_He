@@ -5,7 +5,7 @@ from NN import bVAE
 from glob import glob
 
 
-run_loaded = f'checkpoints/trained_model_eta_I_mapping_0.0_time_20221213-093459'
+run_loaded = f'checkpoints/'
 checkpoint = sorted(glob(f'{run_loaded}/trained_*.pth'))[-2]
 # Load the checkpoint and initialize the model
 print(f'Loading the model from {run_loaded}')
