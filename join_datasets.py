@@ -62,7 +62,7 @@ for component in components:
         data_join['params'] = params_normaliced
 
         print('Nomalizing profiles...')
-        if 'eta_I' in coefficient:
+        if 'eta_It' == coefficient:
             normalization = data_join['profiles'].max(axis=1)
             normalization_coefficient = coefficient
             print(f'Update normalization with {coefficient} max')
