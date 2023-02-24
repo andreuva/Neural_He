@@ -49,12 +49,12 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
     data_join['params'] = params_normaliced
     data_join['params_norm_coeffs'] = normalization_coefficients
     # histogram of the parameters
-    # print('Plotting histograms...')
-    # if coefficient == 'eps_I':
-    #     for i, param in enumerate(['B', 'B_inc', 'B_az', 'x', 'b', 'h', 'mu']):
-    #         plt.hist(params_normaliced[:,i], bins=500)
-    #         plt.title(param)
-    #         plt.show()
+    print('Plotting histograms...')
+    if coefficient == 'eps_I':
+        for i, param in enumerate(['B', 'B_inc', 'B_az', 'x', 'b', 'h', 'mu']):
+            plt.hist(data_join['params_raw'][:,i], bins=500)
+            plt.title(param)
+            plt.show()
 
     print('integrating profiles...')
     # integrate the profiles in nus and then normalize them as min-max range
@@ -100,8 +100,24 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
     plt.title(coefficient)
     plt.show()
 
-    with open(f'{root_dir}model_ready_D3_{coefficient}_normaliced.pkl', 'wb') as f:
-        pkl.dump(data_join, f)
+    # plto the polarization degree of the integrated profiles
+    # polarization degree
+    if coefficient != 'eps_I':
+        pol = profiles_normaliced*100
+        plt.hist(pol, bins=2000, alpha=0.5)
+        plt.show()
+
+        # select the profiles with more than 15% of polarization where B is less than 0.5
+        mask = pol < -15
+        mask = mask * (data_join['params_raw'][:,0] < 10)
+        # print the histogram of the parameters corresponding to the profiles with more than 15% of polarization
+        for i, param in enumerate(['B', 'B_inc', 'B_az', 'x', 'b', 'h', 'mu']):
+            plt.hist(data_join['params_raw'][mask,i], bins=500)
+            plt.title(param)
+            plt.show()
+
+    # with open(f'{root_dir}model_ready_D3_{coefficient}_normaliced.pkl', 'wb') as f:
+    #     pkl.dump(data_join, f)
 
     del data, data_join, params_normaliced
 
