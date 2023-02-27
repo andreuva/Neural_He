@@ -59,14 +59,14 @@ class D3inference:
         self.eps_I_min = self.prof_norm_coeffs[1]
         self.eps_I_mean = self.prof_norm_coeffs[2]
 
-    def __call__(self, b, x, Bx, By, Bz):
+    def __call__(self, b, x_r, Bx, By, Bz):
         """
         call to do the inference of the integrated emission of the D3 line
 
         Parameters:
         ------------------------------------------------------
-        b: distance to the 90 deg LOS (-20, 20)*cts.R_sun
-        x: radial distance to the surface (0, 10)*cts.R_sun
+        b: radial distance to the surface (0, 10)*cts.R_sun
+        x_r: distance to the 90 deg LOS (-20, 20)*cts.R_sun
         Bx: B field in the x direction
         By: B field in the y direction
         Bz: B field in the z direction
@@ -75,16 +75,25 @@ class D3inference:
         B_inc = np.random.uniform(0,180)
         B_az = np.random.uniform(0, 360)
         """
-        
-        B_mod = np.sqrt(Bx**2 + By**2 + Bz**2)
-        B_inc = np.arccos(Bz/B_mod)
-        B_az = np.arctan2(By, Bx)
 
-        h = np.sqrt(x**2 + b**2)
-        mu = x/h
+        # compute height over the surface and angle from the plane of the sky
+        h = np.sqrt(b**2 + x_r**2)
+        mu = b/h
+        sin_delt = x_r/h
+        cos_delt = mu
+
+        # make a rotation of the magnetic field to to have the z in the solar radial direction
+        # this is equivalent to rotate the reference frame using e_y an angle of delt
+        Bx_new = Bx*cos_delt + Bz*sin_delt
+        By_new = By
+        Bz_new = -Bx*sin_delt + Bz*cos_delt
+
+        B_mod = np.sqrt(Bx_new**2 + By_new**2 + Bz_new**2)
+        B_inc = np.arccos(Bz_new/B_mod)
+        B_az = np.arctan2(By_new, Bx_new)
 
         # construct the parameters list with the normalization
-        params = np.array([B_mod, B_inc, B_az, x, b, h, mu])
+        params = np.array([B_mod, B_inc, B_az, b, x_r, h, mu])
 
         params_norm = (params - self.params_mean)/(self.params_max - self.params_min)
         params_norm = params_norm.astype('float32')
@@ -111,14 +120,17 @@ class D3inference:
 
 if __name__ == "__main__":
     # intanciate the class to do the predictions
-    file_checkpoint_I = '../../Desktop/weigths_eps_I.pth'
-    file_checkpoint_Q = '../../Desktop/weigths_eps_Q.pth'
-    file_checkpoint_U = '../../Desktop/weigths_eps_U.pth'
-    file_checkpoint_V = '../../Desktop/weigths_eps_V.pth'
+    file_checkpoint_I = 'weigths_eps_I.pth'
+    file_checkpoint_Q = 'weigths_eps_Q.pth'
+    file_checkpoint_U = 'weigths_eps_U.pth'
+    file_checkpoint_V = 'weigths_eps_V.pth'
 
     D3 = D3inference(file_checkpoint_I, file_checkpoint_Q, file_checkpoint_U, file_checkpoint_V)
 
     R_sun = 6.957e10           # solar radius [cm]
-    epsI, epsQ, epsU, epsV = D3(0*R_sun, 5*R_sun, 10, 0, 0)
+    epsI, epsQ, epsU, epsV = D3(8*R_sun, 0.1*R_sun, 0.0000001, 0, 0)
 
     print(epsI, epsQ, epsU, epsV)
+
+    # print the percentage of the integrated emission over intensity
+    print(epsQ/epsI, epsU/epsI, epsV/epsI)
