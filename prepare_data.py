@@ -33,7 +33,7 @@ def plot_data(freq, profiles, color='b', show=False):
 
 if __name__ == "__main__":
     # load the data from the file
-    folders = sorted(glob.glob('../data/neural_he/spectra/data_D3*'))
+    folders = sorted(glob.glob('../data/neural_he/spectra/data_poldeg*'))
     for folder in folders:
         # if the folder is not actually a folder (is a file) move to the next
         if not os.path.isdir(folder):

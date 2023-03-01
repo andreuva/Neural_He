@@ -36,6 +36,11 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
     high_mask = wavelengths > 5000
     mask = low_mask * high_mask
 
+    param_mask = data_join['params_raw'][:,0] < 0.5
+    param_mask = param_mask * (data_join['params_raw'][:,3] < 0.5*6.957e10)
+    param_mask = param_mask * (data_join['params_raw'][:,3] > -0.5*6.957e10)
+    index_sort = np.argsort(data_join['params_raw'][param_mask,4])
+
     # [print(f'Length of datasets for key "{key}":',[data[i][key].shape for i in range(len(data))],f' joint={data_join[key].shape}') for key in data_join.keys()]
     # [print(f'Shape of each sample for key "{key}":',[data[i][key].shape for i in range(len(data))],f' joint={data_join[key].shape}') for key in data_join.keys()]
 
@@ -53,6 +58,11 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
     if coefficient == 'eps_I':
         for i, param in enumerate(['B', 'B_inc', 'B_az', 'x', 'b', 'h', 'mu']):
             plt.hist(data_join['params_raw'][:,i], bins=500)
+            plt.title(param)
+            plt.show()
+    else:
+        for i, param in enumerate(['B', 'B_inc', 'B_az', 'x', 'b', 'h', 'mu']):
+            plt.hist(data_join['params_raw'][param_mask,i], bins=250)
             plt.title(param)
             plt.show()
 
@@ -98,6 +108,12 @@ for coefficient in ['eps_I', 'eps_Q', 'eps_U', 'eps_V']:
     plt.hist(profiles_normaliced_in, bins=2000, alpha=0.5)
     plt.hist(profiles_normaliced_out, bins=2000, alpha=0.5)
     plt.title(coefficient)
+    plt.show()
+
+    # plot the data sorted in the parameter b
+    plt.plot(data_join['params_raw'][param_mask,4]/6.96e10, profiles_normaliced[param_mask], '.')
+    plt.xlabel('b')
+    plt.ylabel(coefficient)
     plt.show()
 
     # plto the polarization degree of the integrated profiles

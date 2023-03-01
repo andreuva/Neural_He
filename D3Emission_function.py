@@ -1,7 +1,8 @@
 import numpy as np
 import torch
 from NN import MLP
-
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 
 class D3inference:
@@ -120,17 +121,46 @@ class D3inference:
 
 if __name__ == "__main__":
     # intanciate the class to do the predictions
-    file_checkpoint_I = 'weigths_eps_I.pth'
-    file_checkpoint_Q = 'weigths_eps_Q.pth'
-    file_checkpoint_U = 'weigths_eps_U.pth'
-    file_checkpoint_V = 'weigths_eps_V.pth'
+    file_checkpoint_I = 'checkpoint_D3_code/weigths_eps_I.pth'
+    file_checkpoint_Q = 'checkpoint_D3_code/weigths_eps_Q.pth'
+    file_checkpoint_U = 'checkpoint_D3_code/weigths_eps_U.pth'
+    file_checkpoint_V = 'checkpoint_D3_code/weigths_eps_V.pth'
 
     D3 = D3inference(file_checkpoint_I, file_checkpoint_Q, file_checkpoint_U, file_checkpoint_V)
 
     R_sun = 6.957e10           # solar radius [cm]
-    epsI, epsQ, epsU, epsV = D3(8*R_sun, 0.1*R_sun, 0.0000001, 0, 0)
+    
+    # compute the polarization of the D3 line in the plane of the sky from 0.1 to 10 solar radii
+    bs = np.linspace(0.1, 10, 10000)*R_sun
+    epsI = np.zeros_like(bs)
+    epsQ = np.zeros_like(bs)
+    epsU = np.zeros_like(bs)
+    epsV = np.zeros_like(bs)
+    for i, b in tqdm(enumerate(bs)):
+        epsI[i], epsQ[i], epsU[i], epsV[i] = D3(b, 0.01*R_sun, 0.1, 0, 0)
+        # print('\nparameters: ', b/R_sun, 0, 0, 0, 0, 0, 0)
+        # print(epsI, epsQ, epsU, epsV)
+        # print the percentage of the integrated emission over intensity
+        # print(epsQ/epsI, epsU/epsI, epsV/epsI)
+        # print('--'*20)
+    
+    # plot the results
+    plt.figure()
+    plt.plot(bs/R_sun, epsI, label='I')
+    plt.plot(bs/R_sun, -epsQ, label='Q')
+    plt.plot(bs/R_sun, -epsU, label='U')
+    plt.plot(bs/R_sun, epsV, label='V')
+    plt.xlabel('b [R_sun]')
+    plt.ylabel('D3 emission')
+    plt.legend()
+    plt.show()
 
-    print(epsI, epsQ, epsU, epsV)
-
-    # print the percentage of the integrated emission over intensity
-    print(epsQ/epsI, epsU/epsI, epsV/epsI)
+    # plot the percentage of the integrated emission over intensity
+    plt.figure()
+    plt.plot(bs/R_sun, -epsQ/epsI*100, label='Q/I')
+    plt.plot(bs/R_sun, -epsU/epsI*100, label='U/I')
+    plt.plot(bs/R_sun,  epsV/epsI*100, label='V/I')
+    plt.xlabel('b [R_sun]')
+    plt.ylabel('D3 emission')
+    plt.legend()
+    plt.show()

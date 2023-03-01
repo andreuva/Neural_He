@@ -3,10 +3,10 @@ import pickle as pkl
 import matplotlib.pyplot as plt
 from scipy import integrate
 
-with open('../data/neural_he/spectra/data_poldeg_20230224_192007/profiles.pkl', 'rb') as f:
+with open('../data/neural_he/spectra/data_poldeg_20230227_094005/profiles.pkl', 'rb') as f:
     profiles = pkl.load(f)
 
-with open('../data/neural_he/spectra/data_poldeg_20230224_192007/parameters.pkl', 'rb') as f:
+with open('../data/neural_he/spectra/data_poldeg_20230227_094005/parameters.pkl', 'rb') as f:
     parameters = pkl.load(f)
 
 nus = np.array([profiles[i]['nus'] for i in range(len(profiles))], dtype=np.float64)
@@ -14,7 +14,7 @@ eps_I = np.array([profiles[i]['eps_I'] for i in range(len(profiles))], dtype=np.
 eps_Q = np.array([profiles[i]['eps_Q'] for i in range(len(profiles))], dtype=np.float64)
 eps_U = np.array([profiles[i]['eps_U'] for i in range(len(profiles))], dtype=np.float64)
 eps_V = np.array([profiles[i]['eps_V'] for i in range(len(profiles))], dtype=np.float64)
-h = np.array([parameters[i]['h'] for i in range(len(parameters))], dtype=np.float64)/6.957e10
+h = np.array([parameters[i]['h'] for i in range(len(parameters))], dtype=np.float64)
 b = np.array([parameters[i]['b'] for i in range(len(parameters))], dtype=np.float64)
 x = np.array([parameters[i]['x'] for i in range(len(parameters))], dtype=np.float64)
 
@@ -25,7 +25,7 @@ low_mask = wavelengths < 6000
 high_mask = wavelengths > 5000
 mask = low_mask * high_mask
 
-plt.plot(wavelengths, eps_I[0])
+plt.plot(wavelengths[mask], eps_I[0][mask])
 plt.show()
 
 # [b, x, h, mu, chi, B, B_inc, B_az, JKQ]
@@ -46,7 +46,9 @@ eps_U_integrated = integrate.simps(eps_U_integrated[:,mask], nus[:,mask], axis=1
 eps_V_integrated = integrate.simps(eps_V_integrated[:,mask], nus[:,mask], axis=1)
 
 
-plt.plot(h, eps_Q_integrated/eps_I_integrated)
+plt.plot(h/R_sun, -eps_Q_integrated/eps_I_integrated)
+plt.xlabel('h/R_sun')
+plt.ylabel('Q/I')
 plt.show()
 
 """ 
